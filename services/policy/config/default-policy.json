@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "rules": {
+    "maxSteps": 5,
+    "maxAmount": "100",
+    "chains": ["anvil", "solana-local"],
+    "actions": {
+      "anvil": ["approve", "transfer", "swap"],
+      "solana-local": ["transfer"]
+    },
+    "allowRecipients": {
+      "anvil": ["0x1111111111111111111111111111111111111111"],
+      "solana-local": ["Bob111111111111111111111111111111111111111"]
+    },
+    "allowTokens": {
+      "anvil": ["MOCK_USDC", "MOCK_ETH"],
+      "solana-local": ["SOL", "MOCK_USDC"]
+    },
+    "maxSlippageBps": 100,
+    "forbidInfiniteApprove": true,
+    "allowAutonomous": false
+  }
+}
