@@ -55,6 +55,51 @@ authRouter.get("/me", requireAuth, async (req: AuthedRequest, res) => {
   res.json({ user: publicUser(user) });
 });
 
+authRouter.post("/auth/refresh", async (req, res) => {
+  const refreshToken = z.string().min(1).safeParse(req.body?.refreshToken);
+  if (!refreshToken.success) {
+    res.status(400).json({ error: "invalid_body" });
+    return;
+  }
+  try {
+    const claims = verifyRefreshToken(refreshToken.data);
+    const stored = await RefreshToken.findOne({ jti: claims.jti, userId: claims.sub });
+    if (!stored || stored.revokedAt || stored.expiresAt.getTime() < Date.now()) {
+      res.status(401).json({ error: "invalid_refresh" });
+      return;
+    }
+    stored.revokedAt = new Date();
+    await stored.save();
+    const user = await User.findById(claims.sub);
+    if (!user) {
+      res.status(401).json({ error: "invalid_refresh" });
+      return;
+    }
+    const tokens = await issuePair(user.id, user.email);
+    res.json(tokens);
+  } catch {
+    res.status(401).json({ error: "invalid_refresh" });
+  }
+});
+
+authRouter.post("/auth/logout", async (req, res) => {
+  const refreshToken = z.string().min(1).safeParse(req.body?.refreshToken);
+  if (!refreshToken.success) {
+    res.status(400).json({ error: "invalid_body" });
+    return;
+  }
+  try {
+    const claims = verifyRefreshToken(refreshToken.data);
+    await RefreshToken.updateOne(
+      { jti: claims.jti, userId: claims.sub, revokedAt: null },
+      { $set: { revokedAt: new Date() } },
+    );
+  } catch {
+    // still return ok — client clears tokens either way
+  }
+  res.json({ ok: true });
+});
+
 async function issuePair(userId: string, email: string) {
   const jti = newJti();
   const expiresAt = new Date(Date.now() + config.refreshTtlSec * 1000);
