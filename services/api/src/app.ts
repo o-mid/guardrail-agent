@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import { config } from "./config.js";
 import { authRouter } from "./routes/auth.js";
 import { healthRouter } from "./routes/health.js";
+import { walletsRouter } from "./routes/wallets.js";
 
 export function createApp() {
   const app = express();
@@ -25,6 +26,7 @@ export function createApp() {
 
   app.use("/api", healthRouter);
   app.use("/api", authRouter);
+  app.use("/api", walletsRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);
