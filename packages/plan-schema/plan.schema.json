@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guardrail.local/schemas/plan-v1.json",
+  "title": "GuardrailPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "chain", "summary", "steps"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1"
+    },
+    "chain": {
+      "type": "string",
+      "enum": ["anvil", "solana-local"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/approveStep" },
+          { "$ref": "#/$defs/swapStep" },
+          { "$ref": "#/$defs/transferStep" },
+          { "$ref": "#/$defs/solanaTransferStep" }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "decimalAmount": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    },
+    "evmToken": {
+      "type": "string",
+      "enum": ["MOCK_USDC", "MOCK_ETH"]
+    },
+    "approveStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "token", "spender", "amount"],
+      "properties": {
+        "action": { "const": "approve" },
+        "token": { "$ref": "#/$defs/evmToken" },
+        "spender": { "type": "string", "minLength": 1 },
+        "amount": { "$ref": "#/$defs/decimalAmount" }
+      }
+    },
+    "swapStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "tokenIn", "tokenOut", "amountIn", "minAmountOut", "maxSlippageBps"],
+      "properties": {
+        "action": { "const": "swap" },
+        "tokenIn": { "$ref": "#/$defs/evmToken" },
+        "tokenOut": { "$ref": "#/$defs/evmToken" },
+        "amountIn": { "$ref": "#/$defs/decimalAmount" },
+        "minAmountOut": { "$ref": "#/$defs/decimalAmount" },
+        "maxSlippageBps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        }
+      }
+    },
+    "transferStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "token", "to", "amount"],
+      "properties": {
+        "action": { "const": "transfer" },
+        "token": { "$ref": "#/$defs/evmToken" },
+        "to": { "type": "string", "minLength": 1 },
+        "amount": { "$ref": "#/$defs/decimalAmount" }
+      }
+    },
+    "solanaTransferStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "mint", "to", "amount"],
+      "properties": {
+        "action": { "const": "transfer" },
+        "mint": { "type": "string", "enum": ["SOL", "MOCK_USDC"] },
+        "to": { "type": "string", "minLength": 1 },
+        "amount": { "$ref": "#/$defs/decimalAmount" }
+      }
+    }
+  }
+}
