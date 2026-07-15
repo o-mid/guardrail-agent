@@ -9,7 +9,9 @@ FROM alpine:3.20
 WORKDIR /app
 COPY --from=build /out/policy /app/policy
 COPY config /config
+COPY internal/schema /app/internal/schema
 EXPOSE 8090
 ENV PORT=8090
 ENV POLICY_DEFAULTS_PATH=/config/default-policy.json
+ENV PLAN_SCHEMA_PATH=/app/internal/schema/plan.schema.json
 CMD ["/app/policy"]

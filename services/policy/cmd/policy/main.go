@@ -5,10 +5,22 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/o-mid/guardrail-agent/services/policy/internal/validate"
 )
 
 func main() {
 	port := env("PORT", "8090")
+	schemaPath := env("PLAN_SCHEMA_PATH", "internal/schema/plan.schema.json")
+	schemaBytes, err := os.ReadFile(schemaPath)
+	if err != nil {
+		log.Fatalf("read schema: %v", err)
+	}
+	schemaValidator, err := validate.NewSchemaValidator(schemaBytes)
+	if err != nil {
+		log.Fatalf("compile schema: %v", err)
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
@@ -26,12 +38,25 @@ func main() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		writeJSON(w, http.StatusNotImplemented, map[string]any{
-			"ok":            false,
-			"schemaErrors":  []string{"not_implemented"},
-			"policyCodes":   []string{},
-			"humanMessages": []string{"validate endpoint not wired yet"},
-		})
+		var req validate.ValidateRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeJSON(w, http.StatusBadRequest, validate.ValidateResponse{
+				OK:           false,
+				SchemaErrors: []string{"invalid_json"},
+			})
+			return
+		}
+		schemaErrors := schemaValidator.Validate(req.Plan)
+		resp := validate.ValidateResponse{
+			OK:            len(schemaErrors) == 0,
+			SchemaErrors:  schemaErrors,
+			PolicyCodes:   []string{},
+			HumanMessages: []string{},
+		}
+		if len(schemaErrors) > 0 {
+			resp.HumanMessages = append(resp.HumanMessages, "plan failed schema validation")
+		}
+		writeJSON(w, http.StatusOK, resp)
 	})
 
 	addr := ":" + port
