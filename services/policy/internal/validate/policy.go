@@ -27,6 +27,7 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 
 	allowedActions := rules.Actions[chain]
 	allowedTokens := setOf(rules.AllowTokens[chain])
+	allowedRecipients := setOf(rules.AllowRecipients[chain])
 	total := new(big.Rat)
 	capAmt, capErr := parseAmount(rules.MaxAmount)
 	if capErr != nil {
@@ -51,7 +52,12 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 				codes = append(codes, "mint_not_allowed")
 				messages = append(messages, fmt.Sprintf("step %d token %s not allowlisted", i, token))
 			}
-			if amt, err := parseAmount(asString(step["amount"])); err == nil {
+			amount := asString(step["amount"])
+			if rules.ForbidInfiniteApprove && isInfiniteApprove(amount) {
+				codes = append(codes, "infinite_approve")
+				messages = append(messages, fmt.Sprintf("step %d infinite ERC-20 approve is forbidden", i))
+			}
+			if amt, err := parseAmount(amount); err == nil {
 				total.Add(total, amt)
 			}
 		case "swap":
@@ -77,6 +83,11 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 			if len(allowedTokens) > 0 && !allowedTokens[token] {
 				codes = append(codes, "mint_not_allowed")
 				messages = append(messages, fmt.Sprintf("step %d token/mint %s not allowlisted", i, token))
+			}
+			to := asString(step["to"])
+			if len(allowedRecipients) > 0 && !allowedRecipients[to] && !strings.EqualFold(to, "self") {
+				codes = append(codes, "recipient_not_allowed")
+				messages = append(messages, fmt.Sprintf("step %d recipient %s not allowlisted", i, to))
 			}
 			if amt, err := parseAmount(asString(step["amount"])); err == nil {
 				total.Add(total, amt)
@@ -147,6 +158,24 @@ func setOf(list []string) map[string]bool {
 		out[x] = true
 	}
 	return out
+}
+
+func isInfiniteApprove(amount string) bool {
+	s := strings.TrimSpace(strings.ToLower(amount))
+	if s == "unlimited" || s == "max" || s == "infinite" {
+		return true
+	}
+	// common max-uint patterns as decimal strings
+	if strings.HasPrefix(s, "115792089237316195423570985008687907853269984665640564039457") {
+		return true
+	}
+	r, err := parseAmount(s)
+	if err != nil {
+		return false
+	}
+	// treat anything >= 1e30 as infinite for mock units
+	threshold := new(big.Rat).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(30), nil))
+	return r.Cmp(threshold) >= 0
 }
 
 func unique(in []string) []string {
