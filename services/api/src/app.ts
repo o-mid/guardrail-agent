@@ -7,6 +7,7 @@ import { healthRouter } from "./routes/health.js";
 import { walletsRouter } from "./routes/wallets.js";
 import { intentsRouter } from "./routes/intents.js";
 import { plansRouter } from "./routes/plans.js";
+import { auditRouter } from "./routes/audit.js";
 
 export function createApp() {
   const app = express();
@@ -31,6 +32,7 @@ export function createApp() {
   app.use("/api", walletsRouter);
   app.use("/api", intentsRouter);
   app.use("/api", plansRouter);
+  app.use("/api", auditRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);
