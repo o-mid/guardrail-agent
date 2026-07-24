@@ -69,6 +69,49 @@ export default function LoginPage() {
       <p className="mt-4 text-sm text-ink/70">
         No account? <Link href="/register">Register</Link>
       </p>
+      <div className="mt-8 border-t border-line pt-6">
+        <p className="text-sm font-medium">Wallet sign-in</p>
+        <p className="mt-1 text-xs text-ink/60">
+          SIWE (EVM) and Solana message sign hit the API when a browser wallet is available. Email
+          login stays the default for the Compose demo.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="border border-line bg-paper/70 px-3 py-2 text-xs"
+            onClick={async () => {
+              setError(null);
+              try {
+                const eth = (window as unknown as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
+                if (!eth) {
+                  setError("no_evm_wallet");
+                  return;
+                }
+                const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+                const address = accounts[0];
+                const { nonce } = await api<{ nonce: string }>("/api/auth/siwe/nonce", { method: "POST", body: "{}" });
+                const domain = window.location.host;
+                const uri = window.location.origin;
+                const message = `${domain} wants you to sign in with your Ethereum account:\n${address}\n\nGuardrail Agent\n\nURI: ${uri}\nVersion: 1\nChain ID: 31337\nNonce: ${nonce}\nIssued At: ${new Date().toISOString()}`;
+                const signature = (await eth.request({
+                  method: "personal_sign",
+                  params: [message, address],
+                })) as string;
+                const data = await api<{ accessToken: string; refreshToken: string }>("/api/auth/siwe/verify", {
+                  method: "POST",
+                  body: JSON.stringify({ message, signature }),
+                });
+                saveTokens(data.accessToken, data.refreshToken);
+                router.push("/app");
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "siwe_failed");
+              }
+            }}
+          >
+            Sign in with Ethereum
+          </button>
+        </div>
+      </div>
     </main>
   );
 }

@@ -5,3 +5,4 @@ export { Intent } from "./Intent.js";
 export { Plan } from "./Plan.js";
 export { PlanStep } from "./PlanStep.js";
 export { AuditEvent } from "./AuditEvent.js";
+export { SiweNonce } from "./SiweNonce.js";
