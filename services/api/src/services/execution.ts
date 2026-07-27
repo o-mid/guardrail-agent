@@ -1,4 +1,5 @@
 import { AuditEvent, Plan, PlanStep } from "../models/index.js";
+import { publishPlanEvent } from "../sse/hub.js";
 
 export type ExecResult = { ok: boolean; txHash?: string; error?: string; dryRunOk?: boolean };
 
@@ -43,6 +44,7 @@ export async function approveStep(userId: string, planId: string, index: number)
     userId,
     payload: { index },
   });
+  publishPlanEvent(userId, plan.id, "step", { type: "approved", index, status: plan.status });
 
   step.status = "dry_running";
   await step.save();
@@ -68,6 +70,7 @@ export async function approveStep(userId: string, planId: string, index: number)
       userId,
       payload: { index, error: step.error },
     });
+    publishPlanEvent(userId, plan.id, "step", { type: "failed", index, error: step.error, status: plan.status });
     return { plan, step, result };
   }
 
@@ -83,15 +86,23 @@ export async function approveStep(userId: string, planId: string, index: number)
     userId,
     payload: { index, txHash: step.txHash },
   });
+  publishPlanEvent(userId, plan.id, "step", {
+    type: "succeeded",
+    index,
+    txHash: step.txHash,
+    status: plan.status,
+  });
 
   const remaining = await PlanStep.countDocuments({ planId, status: { $nin: ["succeeded", "cancelled"] } });
   if (remaining === 0) {
     plan.status = "completed";
     await plan.save();
     await AuditEvent.create({ type: "plan.completed", entityId: plan.id, userId, payload: {} });
+    publishPlanEvent(userId, plan.id, "plan", { type: "completed", status: plan.status });
   } else {
     plan.status = "awaiting_approval";
     await plan.save();
+    publishPlanEvent(userId, plan.id, "plan", { type: "awaiting_approval", status: plan.status });
   }
 
   return { plan, step, result };
@@ -114,5 +125,6 @@ export async function rejectPlan(userId: string, planId: string) {
     userId,
     payload: {},
   });
+  publishPlanEvent(userId, plan.id, "plan", { type: "cancelled", status: plan.status });
   return { plan };
 }

@@ -9,6 +9,7 @@ import { intentsRouter } from "./routes/intents.js";
 import { plansRouter } from "./routes/plans.js";
 import { auditRouter } from "./routes/audit.js";
 import { walletAuthRouter } from "./routes/walletAuth.js";
+import { streamRouter } from "./routes/stream.js";
 
 export function createApp() {
   const app = express();
@@ -34,6 +35,7 @@ export function createApp() {
   app.use("/api", walletsRouter);
   app.use("/api", intentsRouter);
   app.use("/api", plansRouter);
+  app.use("/api", streamRouter);
   app.use("/api", auditRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
