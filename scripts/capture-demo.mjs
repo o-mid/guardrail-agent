@@ -17,7 +17,7 @@ const context = await browser.newContext({
 // Keep the guide from covering screenshots unless we want it.
 await context.addInitScript(() => {
   localStorage.setItem(
-    "ga-guide-v2",
+    "ga-guide-v3",
     JSON.stringify({ open: false, step: 0, dismissed: true }),
   );
 });
