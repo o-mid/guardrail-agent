@@ -41,7 +41,7 @@ export const defaultRules: PolicyRules = {
   },
   allowRecipients: {
     anvil: ["0x1111111111111111111111111111111111111111"],
-    "solana-local": ["Bob111111111111111111111111111111111111111"],
+    "solana-local": ["496mWS1YCGE7YVzGzqifoRvzmtgUvgG1Mz3vht22GsSK"],
   },
   allowTokens: {
     anvil: ["MOCK_USDC", "MOCK_ETH"],

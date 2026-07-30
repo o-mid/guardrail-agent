@@ -1,7 +1,7 @@
 import type { PlanV1, Planner } from "./types.js";
 
 const ALICE = "0x1111111111111111111111111111111111111111";
-const BOB_SOL = "Bob111111111111111111111111111111111111111";
+const BOB_SOL = "496mWS1YCGE7YVzGzqifoRvzmtgUvgG1Mz3vht22GsSK";
 const EVIL = "0xEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
 export class MockPlanner implements Planner {
