@@ -1,0 +1,10 @@
+{
+  "id": "schema-unknown-action",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "anvil",
+    "summary": "bad action",
+    "steps": [{ "action": "bridge", "token": "MOCK_USDC", "to": "0x1111111111111111111111111111111111111111", "amount": "1" }]
+  },
+  "expect": { "ok": false, "schema": true }
+}

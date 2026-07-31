@@ -1,0 +1,10 @@
+{
+  "id": "schema-missing-amount",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "anvil",
+    "summary": "missing amount",
+    "steps": [{ "action": "transfer", "token": "MOCK_USDC", "to": "0x1111111111111111111111111111111111111111" }]
+  },
+  "expect": { "ok": false, "schema": true }
+}

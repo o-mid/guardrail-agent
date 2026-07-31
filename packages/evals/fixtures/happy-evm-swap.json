@@ -1,0 +1,5 @@
+{
+  "id": "happy-evm-swap",
+  "intent": "Swap 10 MOCK_USDC for MOCK_ETH",
+  "expect": { "ok": true, "chain": "anvil", "action": "swap" }
+}

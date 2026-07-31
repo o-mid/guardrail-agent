@@ -1,0 +1,15 @@
+{
+  "id": "policy-bad-recipient",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "anvil",
+    "summary": "bad recipient",
+    "steps": [{
+      "action": "transfer",
+      "token": "MOCK_USDC",
+      "to": "0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddead",
+      "amount": "5"
+    }]
+  },
+  "expect": { "ok": false, "policyCodes": ["recipient_not_allowed"] }
+}

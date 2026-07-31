@@ -1,0 +1,5 @@
+{
+  "id": "happy-solana-transfer",
+  "intent": "Send 0.1 SOL to Bob",
+  "expect": { "ok": true, "chain": "solana-local", "action": "transfer" }
+}

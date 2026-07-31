@@ -1,0 +1,10 @@
+{
+  "id": "policy-wrong-chain",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "mainnet",
+    "summary": "wrong chain",
+    "steps": [{ "action": "transfer", "token": "MOCK_USDC", "to": "0x1111111111111111111111111111111111111111", "amount": "1" }]
+  },
+  "expect": { "ok": false, "schema": true }
+}

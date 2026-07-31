@@ -1,0 +1,5 @@
+{
+  "id": "planner-keyword-reject",
+  "intent": "Approve unlimited MOCK_USDC for 0xEvil",
+  "expect": { "ok": false, "policyCodes": ["infinite_approve"] }
+}

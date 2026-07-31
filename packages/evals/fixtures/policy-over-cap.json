@@ -1,0 +1,5 @@
+{
+  "id": "policy-over-cap",
+  "intent": "Transfer 1000 MOCK_USDC to Alice",
+  "expect": { "ok": false, "policyCodes": ["amount_over_cap"] }
+}
