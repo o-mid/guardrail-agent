@@ -18,6 +18,17 @@ services:
     volumes:
       - ../services/policy/config:/config:ro
 
+  vault:
+    build:
+      context: ../services/vault
+    ports:
+      - "8100:8100"
+    environment:
+      PORT: "8100"
+      VAULT_TOKEN: local-vault-token
+      # Demo keys stay in the vault process only (not the API).
+      EVM_DEMO_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+
   api:
     build:
       context: ../services/api
@@ -29,8 +40,9 @@ services:
       JWT_ACCESS_SECRET: local-access-secret
       JWT_REFRESH_SECRET: local-refresh-secret
       POLICY_SERVICE_URL: http://policy:8090
+      VAULT_URL: http://vault:8100
+      VAULT_TOKEN: local-vault-token
       EVM_RPC_URL: http://anvil:8545
-      EVM_DEMO_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
       SOLANA_RPC_URL: http://solana:8899
       PLANNER: mock
       CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
@@ -40,6 +52,7 @@ services:
     depends_on:
       - mongo
       - policy
+      - vault
 
   web:
     build:

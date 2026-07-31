@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { config } from "../config.js";
 import { dbReady } from "../db.js";
+import { vaultHealthy } from "../vault/client.js";
 
 export const healthRouter = Router();
 
@@ -13,12 +14,14 @@ healthRouter.get("/health", async (_req, res) => {
   } catch {
     policy = false;
   }
+  const vault = await vaultHealthy();
 
   const ok = mongo;
   res.status(ok ? 200 : 503).json({
     ok,
     mongo,
     policy,
+    vault,
     planner: config.planner,
     evmRpc: config.evmRpcUrl,
     solanaRpc: config.solanaRpcUrl,
