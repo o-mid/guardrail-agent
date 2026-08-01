@@ -110,9 +110,15 @@ async function issuePair(userId: string, email: string) {
   };
 }
 
-function publicUser(user: { id: string; email: string; evmAddress?: string | null; solanaPubkey?: string | null }) {
+function publicUser(user: {
+  _id?: { toString(): string };
+  id?: string;
+  email: string;
+  evmAddress?: string | null;
+  solanaPubkey?: string | null;
+}) {
   return {
-    id: user.id,
+    id: user.id ?? user._id?.toString() ?? "",
     email: user.email,
     evmAddress: user.evmAddress ?? null,
     solanaPubkey: user.solanaPubkey ?? null,
