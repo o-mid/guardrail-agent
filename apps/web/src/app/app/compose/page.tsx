@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { Button } from "@/components/Button";
+import { PolicyReject } from "@/components/PolicyReject";
+import { StatusPill } from "@/components/StatusPill";
+import { StepRow } from "@/components/StepRow";
 import { api } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
@@ -16,14 +20,31 @@ const CHIPS = [
 
 type CreateResp = {
   intent: { _id: string; status: string };
-  plan: { _id: string; status: string; summary: string; chain: string; rejectionReasons?: string[] } | null;
-  steps: Array<{ index: number; action: string; decodedSummary: string; status: string; payload: Record<string, unknown> }>;
-  validation: { ok: boolean; policyCodes: string[]; humanMessages: string[]; schemaErrors: string[] } | null;
+  plan: {
+    _id: string;
+    status: string;
+    summary: string;
+    chain: string;
+    rejectionReasons?: string[];
+  } | null;
+  steps: Array<{
+    index: number;
+    action: string;
+    decodedSummary: string;
+    status: string;
+    payload: Record<string, unknown>;
+  }>;
+  validation: {
+    ok: boolean;
+    policyCodes: string[];
+    humanMessages: string[];
+    schemaErrors: string[];
+  } | null;
 };
 
 export default function ComposePage() {
   const router = useRouter();
-  const [text, setText] = useState(CHIPS[0]);
+  const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CreateResp | null>(null);
@@ -71,10 +92,11 @@ export default function ComposePage() {
     }
   }
 
-  async function reject() {
+  async function rejectPlan() {
     if (!result?.plan) return;
     const token = getAccessToken();
     if (!token) return;
+    setError(null);
     try {
       const data = await api<{ plan: CreateResp["plan"]; steps: CreateResp["steps"] }>(
         `/api/plans/${result.plan._id}/reject`,
@@ -88,111 +110,132 @@ export default function ComposePage() {
 
   const rejected =
     result?.plan &&
-    (result.plan.status === "rejected_policy" || result.plan.status === "rejected_schema");
+    (result.plan.status === "rejected_policy" ||
+      result.plan.status === "rejected_schema" ||
+      result.plan.status === "rejected");
+
+  const canReject =
+    result?.plan &&
+    (result.plan.status === "awaiting_approval" || result.plan.status === "executing");
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="font-display text-3xl">Compose</h1>
-        <Link href="/app" className="text-sm underline">
-          Back
-        </Link>
-      </div>
-      <form onSubmit={submit} className="mt-6 space-y-3">
-        <label className="block text-sm">
-          Intent
-          <textarea
-            className="mt-1 w-full border border-line bg-paper/80 px-3 py-2"
-            rows={3}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {CHIPS.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              className="border border-line bg-paper/60 px-2 py-1 text-xs hover:bg-paper"
-              onClick={() => setText(chip)}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-        >
-          {loading ? "Planning…" : "Create plan"}
-        </button>
-      </form>
+    <div>
+      <header className="mb-8">
+        <h1 className="font-display text-3xl font-semibold text-ink">Compose</h1>
+        <p className="mt-1 text-sm text-ink-muted">Describe a wallet action in plain language.</p>
+      </header>
 
-      {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
+      <section>
+        <form onSubmit={submit} className="space-y-4">
+          <label className="block text-sm font-medium text-ink">
+            Intent
+            <textarea
+              className="mt-1.5 w-full resize-y border border-line bg-surface px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              rows={4}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="e.g. Send 5 MOCK_USDC to Alice"
+            />
+          </label>
 
-      {result?.plan ? (
-        <section className="mt-10 border border-line bg-paper/50 p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-ink/50">Plan review</p>
-              <h2 className="mt-1 font-display text-2xl">{result.plan.summary}</h2>
-              <p className="mt-1 text-sm text-ink/70">
-                {result.plan.chain} · {result.plan.status}
-              </p>
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">Examples</p>
+            <div className="flex flex-wrap gap-2">
+              {CHIPS.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setText(chip)}
+                  className="border border-line bg-surface px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
+                >
+                  {chip}
+                </button>
+              ))}
             </div>
-            {result.plan.status === "awaiting_approval" || result.plan.status === "executing" ? (
-              <button type="button" onClick={reject} className="border border-danger px-3 py-1.5 text-sm text-danger">
-                Reject plan
-              </button>
-            ) : null}
           </div>
 
+          <Button type="submit" disabled={loading || !text.trim()}>
+            {loading ? "Planning…" : "Create plan"}
+          </Button>
+        </form>
+
+        {error ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-sm border border-danger/30 bg-danger-bg px-3 py-2 text-sm text-danger"
+          >
+            {error}
+          </p>
+        ) : null}
+      </section>
+
+      {result?.plan ? (
+        <section className="mt-12 border border-line bg-surface">
           {rejected ? (
-            <div className="mt-4 border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
-              <p className="font-medium">Rejected</p>
-              <p className="mt-1">{(result.validation?.policyCodes ?? result.plan.rejectionReasons ?? []).join(", ")}</p>
-              <ul className="mt-2 list-disc pl-5">
-                {(result.validation?.humanMessages ?? []).map((m) => (
-                  <li key={m}>{m}</li>
-                ))}
-              </ul>
-            </div>
+            <PolicyReject
+              policyCodes={
+                result.validation?.policyCodes.length
+                  ? result.validation.policyCodes
+                  : (result.plan.rejectionReasons ?? [])
+              }
+              humanMessages={result.validation?.humanMessages ?? []}
+              schemaErrors={result.validation?.schemaErrors ?? []}
+            />
           ) : null}
 
-          <ul className="mt-5 space-y-3">
-            {result.steps.map((step) => (
-              <li key={step.index} className="border border-line/80 bg-white/40 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-medium">
-                      #{step.index} {step.action}
-                    </p>
-                    <p className="text-sm text-ink/70">{step.decodedSummary}</p>
-                    <p className="mt-1 text-xs uppercase tracking-wide text-ink/50">{step.status}</p>
-                  </div>
-                  {step.status === "pending" && result.plan?.status === "awaiting_approval" ? (
-                    <button
-                      type="button"
-                      disabled={busyStep === step.index}
-                      onClick={() => approve(step.index)}
-                      className="bg-ink px-3 py-1.5 text-sm text-paper disabled:opacity-60"
-                    >
-                      {busyStep === step.index ? "Working…" : "Approve"}
-                    </button>
-                  ) : null}
+          <div className="p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Plan review</p>
+                <h2 className="mt-1 font-display text-2xl font-semibold text-ink">{result.plan.summary}</h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+                  <span>{result.plan.chain}</span>
+                  <StatusPill status={result.plan.status} />
                 </div>
-              </li>
-            ))}
-          </ul>
+              </div>
+              {canReject ? (
+                <Button
+                  variant="danger"
+                  onClick={rejectPlan}
+                  aria-label="Reject entire plan"
+                  className="shrink-0"
+                >
+                  Reject plan
+                </Button>
+              ) : null}
+            </div>
 
-          {result.plan._id ? (
-            <p className="mt-4 text-xs text-ink/50">
-              Live updates: <Link className="underline" href={`/app/plans/${result.plan._id}`}>open execution feed</Link>
-            </p>
-          ) : null}
+            <ul className="mt-6 space-y-2" aria-label="Plan steps">
+              {result.steps.map((step) => (
+                <StepRow
+                  key={step.index}
+                  index={step.index}
+                  action={step.action}
+                  decodedSummary={step.decodedSummary}
+                  status={step.status}
+                  canApprove={
+                    step.status === "pending" && result.plan?.status === "awaiting_approval"
+                  }
+                  busy={busyStep === step.index}
+                  onApprove={() => approve(step.index)}
+                />
+              ))}
+            </ul>
+
+            {result.plan._id ? (
+              <p className="mt-6 text-sm text-ink-muted">
+                Watch execution:{" "}
+                <Link
+                  href={`/app/plans/${result.plan._id}`}
+                  className="font-medium text-accent hover:underline"
+                >
+                  open execution feed
+                </Link>
+              </p>
+            ) : null}
+          </div>
         </section>
       ) : null}
-    </main>
+    </div>
   );
 }
