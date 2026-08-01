@@ -1,26 +1,26 @@
-import Link from "next/link";
+import { ButtonLink } from "@/components/Button";
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
-      <p className="font-display text-5xl tracking-tight text-ink md:text-6xl">Guardrail Agent</p>
-      <p className="mt-4 max-w-xl text-lg text-ink/80">
-        Natural language in. Schema-checked plan out. Policy gate, human approve, then dry-run and
-        submit. Nothing valuable moves without your click.
-      </p>
-      <div className="mt-8 flex gap-3">
-        <Link
-          href="/login"
-          className="bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90"
-        >
-          Log in
-        </Link>
-        <Link
-          href="/register"
-          className="border border-line bg-paper/70 px-5 py-2.5 text-sm font-medium hover:bg-paper"
-        >
-          Register
-        </Link>
+    <main className="flex min-h-screen flex-col justify-center px-6">
+      <div className="mx-auto w-full max-w-3xl motion-safe:animate-mark-fade-in">
+        <div className="mb-6 flex h-10 w-10 items-center justify-center border-2 border-accent bg-surface">
+          <span className="font-display text-sm font-bold text-accent" aria-hidden="true">
+            G
+          </span>
+        </div>
+        <h1 className="font-display text-5xl font-semibold tracking-tight text-ink md:text-6xl">
+          Guardrail Agent
+        </h1>
+        <p className="mt-4 max-w-lg text-lg text-ink-muted">
+          Natural language in. Policy-checked plan out. Nothing moves without your approval.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <ButtonLink href="/login">Log in</ButtonLink>
+          <ButtonLink href="/register" variant="secondary">
+            Register
+          </ButtonLink>
+        </div>
       </div>
     </main>
   );
