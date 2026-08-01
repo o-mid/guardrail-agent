@@ -3,11 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --bg0: #e8e2d4;
-  --bg1: #f7f3ea;
-  --ink: #152028;
-  --accent: #0f6b5c;
-  --danger: #9b2c2c;
+  --canvas: #f4f5f6;
+  --canvas-subtle: #e9ecef;
+  --surface: #ffffff;
+  --ink: #1c2228;
+  --ink-muted: #5a6570;
+  --accent: #0a9e8f;
+  --accent-hover: #088578;
+  --danger: #c62828;
+  --danger-bg: #fdecea;
+  --line: #d4d8dc;
+  --focus: #0a9e8f;
 }
 
 html,
@@ -17,13 +23,36 @@ body {
 
 body {
   color: var(--ink);
-  font-family: "IBM Plex Sans", Helvetica, Arial, sans-serif;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, #d9ebe4 0%, transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, #efe2c8 0%, transparent 50%),
-    linear-gradient(180deg, var(--bg1), var(--bg0));
+  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--canvas);
 }
 
 a {
   color: inherit;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
