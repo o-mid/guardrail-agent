@@ -28,11 +28,13 @@ function label(status: Status): string {
 
 export function StatusPill({ status }: { status: Status }) {
   const style = styles[status] ?? styles.pending;
+  const text = label(status);
   return (
     <span
+      aria-label={`Status: ${text}`}
       className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium uppercase tracking-wide transition-colors ${style}`}
     >
-      {label(status)}
+      {text}
     </span>
   );
 }

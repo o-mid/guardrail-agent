@@ -146,6 +146,7 @@ export default function ComposePage() {
                   key={chip}
                   type="button"
                   onClick={() => setText(chip)}
+                  aria-label={`Use example: ${chip}`}
                   className="border border-line bg-surface px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
                 >
                   {chip}
@@ -171,6 +172,9 @@ export default function ComposePage() {
 
       {result?.plan ? (
         <section className="mt-12 border border-line bg-surface">
+          <p aria-live="polite" aria-atomic="true" className="sr-only">
+            Plan status: {result.plan.status.replace(/_/g, " ")}
+          </p>
           {rejected ? (
             <PolicyReject
               policyCodes={

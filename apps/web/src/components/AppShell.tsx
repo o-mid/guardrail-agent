@@ -39,6 +39,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-canvas">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-6">
           <div className="flex items-center gap-8">
@@ -84,7 +87,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 py-10">
+        {children}
+      </main>
     </div>
   );
 }
