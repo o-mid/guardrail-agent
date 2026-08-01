@@ -47,11 +47,21 @@ func main() {
 			return
 		}
 		schemaErrors := schemaValidator.Validate(req.Plan)
-		var policyCodes, human []string
+		policyCodes := []string{}
+		human := []string{}
 		if len(schemaErrors) == 0 {
 			policyCodes, human = validate.CheckPolicy(req.Plan, req.Policy)
 		} else {
 			human = append(human, "plan failed schema validation")
+		}
+		if schemaErrors == nil {
+			schemaErrors = []string{}
+		}
+		if policyCodes == nil {
+			policyCodes = []string{}
+		}
+		if human == nil {
+			human = []string{}
 		}
 		resp := validate.ValidateResponse{
 			OK:            len(schemaErrors) == 0 && len(policyCodes) == 0,

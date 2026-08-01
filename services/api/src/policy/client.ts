@@ -28,7 +28,13 @@ export async function validatePlan(plan: unknown, policy: { version: number; rul
   if (!r.ok) {
     throw new Error(`policy service ${r.status}`);
   }
-  return (await r.json()) as ValidateResult;
+  const raw = (await r.json()) as Partial<ValidateResult>;
+  return {
+    ok: Boolean(raw.ok),
+    schemaErrors: raw.schemaErrors ?? [],
+    policyCodes: raw.policyCodes ?? [],
+    humanMessages: raw.humanMessages ?? [],
+  };
 }
 
 export const defaultRules: PolicyRules = {

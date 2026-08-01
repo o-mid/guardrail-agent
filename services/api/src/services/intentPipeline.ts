@@ -53,8 +53,12 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     return { intent, plan: null };
   }
 
+  const policyCodes = validation.policyCodes ?? [];
+  const schemaErrors = validation.schemaErrors ?? [];
+  const humanMessages = validation.humanMessages ?? [];
+
   if (!validation.ok) {
-    const schemaFail = validation.schemaErrors.length > 0;
+    const schemaFail = schemaErrors.length > 0;
     intent.status = schemaFail ? "rejected_schema" : "rejected_policy";
     await intent.save();
     const plan = await Plan.create({
@@ -65,7 +69,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       summary: planJson.summary,
       status: schemaFail ? "rejected_schema" : "rejected_policy",
       rawModelJson: planJson,
-      rejectionReasons: [...validation.policyCodes, ...validation.schemaErrors],
+      rejectionReasons: [...policyCodes, ...schemaErrors],
       policyVersion: policy.version,
     });
     await AuditEvent.create({
@@ -73,12 +77,16 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       entityId: plan.id,
       userId,
       payload: {
-        policyCodes: validation.policyCodes,
-        schemaErrors: validation.schemaErrors,
-        humanMessages: validation.humanMessages,
+        policyCodes,
+        schemaErrors,
+        humanMessages,
       },
     });
-    return { intent, plan, validation };
+    return {
+      intent,
+      plan,
+      validation: { ...validation, policyCodes, schemaErrors, humanMessages },
+    };
   }
 
   const plan = await Plan.create({
