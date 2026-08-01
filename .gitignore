@@ -4,6 +4,8 @@ build/
 .next/
 out/
 coverage/
+*.tsbuildinfo
+
 .turbo/
 *.log
 .DS_Store
