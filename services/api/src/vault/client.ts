@@ -51,6 +51,17 @@ export async function vaultSignEvmMessage(message: string): Promise<{ signature:
   });
 }
 
+function jsonSafe(value: unknown): unknown {
+  if (typeof value === "bigint") return value.toString();
+  if (Array.isArray(value)) return value.map(jsonSafe);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) out[k] = jsonSafe(v);
+    return out;
+  }
+  return value;
+}
+
 export async function vaultSignEvmTx(transaction: VaultEvmTx): Promise<{
   rawTransaction: string;
   hash: string | null;
@@ -58,7 +69,7 @@ export async function vaultSignEvmTx(transaction: VaultEvmTx): Promise<{
 }> {
   return vaultFetch("/v1/evm/sign-transaction", {
     method: "POST",
-    body: JSON.stringify({ transaction }),
+    body: JSON.stringify({ transaction: jsonSafe(transaction) }),
   });
 }
 
