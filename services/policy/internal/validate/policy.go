@@ -108,6 +108,9 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 }
 
 func asString(v any) string {
+	if v == nil {
+		return ""
+	}
 	switch t := v.(type) {
 	case string:
 		return t

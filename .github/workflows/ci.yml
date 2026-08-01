@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/policy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: test
+        run: go test ./...
+      - name: build
+        run: go build -o /tmp/policy ./cmd/policy
+
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: services/api/package-lock.json
+      - run: npm ci
+      - run: npx tsc -p tsconfig.json --noEmit
+
+  contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - run: forge install foundry-rs/forge-std --no-git
+      - run: forge test
+
+  evals:
+    runs-on: ubuntu-latest
+    needs: [policy]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: services/api/package-lock.json
+      - name: start policy
+        working-directory: services/policy
+        run: |
+          go build -o /tmp/policy ./cmd/policy
+          PLAN_SCHEMA_PATH=$PWD/internal/schema/plan.schema.json \
+          POLICY_DEFAULTS_PATH=$PWD/config/default-policy.json \
+          /tmp/policy &
+          sleep 1
+      - name: install api deps for planner import
+        working-directory: services/api
+        run: npm ci
+      - name: run evals
+        working-directory: packages/evals
+        run: |
+          npm install
+          POLICY_SERVICE_URL=http://127.0.0.1:8090 npm test
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npx tsc -p tsconfig.json --noEmit
