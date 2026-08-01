@@ -16,7 +16,10 @@ export const config = {
   solanaDemoKeypairPath: process.env.SOLANA_DEMO_KEYPAIR_PATH ?? "",
   planner: (process.env.PLANNER ?? "mock") as "mock" | "openai",
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
-  corsOrigins: (process.env.CORS_ORIGINS ?? "http://localhost:3000").split(",").map((s) => s.trim()),
+  corsOrigins: (process.env.CORS_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
   siweDomain: process.env.SIWE_DOMAIN ?? "localhost",
   siweUri: process.env.SIWE_URI ?? "http://localhost:3000",
   accessTtlSec: 15 * 60,
