@@ -18,7 +18,8 @@ export class MockPlanner implements Planner {
             action: "approve",
             token: "MOCK_USDC",
             spender: EVIL,
-            amount: "unlimited",
+            // decimal string that passes schema, blocked by infinite_approve policy
+            amount: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
           },
         ],
       };

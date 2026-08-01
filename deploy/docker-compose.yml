@@ -3,8 +3,9 @@ services:
     image: mongo:7
     ports:
       - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+    # tmpfs avoids WiredTiger crashes on some Colima/virtio volume setups
+    tmpfs:
+      - /data/db:rw,size=512m
 
   policy:
     build:
@@ -62,6 +63,3 @@ services:
     ports:
       - "8899:8899"
     profiles: ["full"]
-
-volumes:
-  mongo_data:
