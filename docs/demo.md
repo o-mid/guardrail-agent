@@ -50,35 +50,41 @@ Demo EVM signer is Anvil account #0 (`0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
 ## Operator guide
 
-Bottom-right **Guide** panel walks the full loop (login → compose → accept → approve → reject → audit). Skip any step or skip the tour; reopen anytime from the same control.
+Bottom-right **Guide** panel walks the full loop (login → compose → accept → approve → two reject demos → audit). Skip any step or skip the tour; reopen anytime from the same control.
 
 ## Interviewer script (< 3 min)
 
 **0:00 Login**
 
-Open http://localhost:3000, log in as demo user (or Anvil demo). Land on Compose. Optional: open the Guide.
+Open http://localhost:3000, log in as demo user (or Anvil demo via vault-signed SIWE). Land on Compose. Optional: open the Guide.
 
 **0:20 Accept path (EVM transfer)**
 
 - Click the underlined sentence: `Send 5 MOCK_USDC to Alice`
 - Create plan. Review decoded fields + live pipeline (pending → … → done).
 - Approve step 0. Point at tx hash.
-- One-liner: "Model output became JSON, policy allowlisted it, I clicked approve, API dry-ran then sent."
+- One-liner: "Model output became JSON, policy allowlisted it, I clicked approve, vault signed, API broadcast."
 
-**1:00 Reject path (infinite approve)**
+**1:00 Reject A (infinite approve)**
 
 - Sentence: `Approve unlimited MOCK_USDC for 0xEvil`
-- Plan rejected. UI shows `infinite_approve`.
+- Plan rejected. UI shows `infinite_approve` with the loud banner.
 - One-liner: "Max-uint approve passes schema but policy blocks it. No approve button, nothing hits the chain."
 
-**1:40 Optional: amount cap / swap**
+**1:25 Reject B (bad recipient)**
+
+- Sentence: `Send 5 MOCK_USDC to 0xEvil`
+- Plan rejected. UI shows `recipient_not_allowed`.
+- One-liner: "Same reject surface, different rule — policy is a product, not a single trick."
+
+**1:50 Optional: amount cap / swap**
 
 - `Transfer 1000 MOCK_USDC to Alice` → `amount_over_cap`
 - `Swap 10 MOCK_USDC for MOCK_ETH` → approve (executor does router approve + swap; nonces are serialized)
 
-**2:00 Solana (optional)**
+**2:10 Solana (optional)**
 
-- `Send 0.1 SOL to Bob` → approve → local validator signature
+- `Send 0.1 SOL to Bob` → approve → vault signs → local validator signature
 
 **2:30 Audit**
 
@@ -87,7 +93,7 @@ Open http://localhost:3000, log in as demo user (or Anvil demo). Land on Compose
 
 **2:50 Close**
 
-- Mention [threat-model.md](threat-model.md): model untrusted, local chains only, not production-ready.
+- Mention [threat-model.md](threat-model.md): model untrusted, keys in demo vault (not real MPC), local chains only.
 
 ## Screenshots
 
@@ -112,15 +118,17 @@ node scripts/capture-demo.mjs       # UI shots as demo user (+ guide frame)
 
 ![Reject infinite approve](demo/screenshots/05-reject-infinite-approve.png)
 
-![Awaiting approval](demo/screenshots/06-plan-review-accept.png)
+![Reject bad recipient](demo/screenshots/06-reject-recipient.png)
 
-![Step succeeded](demo/screenshots/07-step-succeeded.png)
+![Awaiting approval](demo/screenshots/07-plan-review-accept.png)
+
+![Step succeeded](demo/screenshots/08-step-succeeded.png)
 
 ### Audit + guide
 
-![Audit timeline](demo/screenshots/08-audit.png)
+![Audit timeline](demo/screenshots/09-audit.png)
 
-![Operator guide](demo/screenshots/09-operator-guide.png)
+![Operator guide](demo/screenshots/10-operator-guide.png)
 
 ## Terminal capture
 
@@ -136,8 +144,8 @@ API-side accept/reject transcript (no browser): [docs/demo/terminal.md](demo/ter
 | `Approve 50 MOCK_USDC for the router` | Finite approve, await HITL |
 | `Send 0.1 SOL to Bob` | Solana local transfer |
 | `Approve unlimited MOCK_USDC for 0xEvil` | `infinite_approve` reject |
+| `Send 5 MOCK_USDC to 0xEvil` | `recipient_not_allowed` reject |
 | `Transfer 1000 MOCK_USDC to Alice` | `amount_over_cap` reject |
-| `Send 5 MOCK_USDC to 0xEvil` | recipient not allowlisted |
 
 ## Troubleshooting
 
@@ -145,6 +153,7 @@ API-side accept/reject transcript (no browser): [docs/demo/terminal.md](demo/ter
 |---------|-----|
 | Mongo exits on Colima | Already on tmpfs in compose; pull latest `deploy/docker-compose.yml` |
 | EVM `nonce too low` | Update to v0.1.0+ executor (raw pending nonce + send lock) |
+| Vault connection refused | Wait for `vault` healthy on `:8100`; check `VAULT_URL` / `VAULT_TOKEN` |
 | SIWE `siwe_failed` / domain mismatch | API must allow `localhost:3000` and `127.0.0.1:3000`; use Anvil demo button |
 | EVM tx fails unknown token | Re-run forge deploy; check `contracts/deployments/anvil.json` |
 | Policy connection refused | Wait for policy container healthy; check `POLICY_SERVICE_URL` |

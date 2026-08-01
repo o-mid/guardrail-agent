@@ -60,6 +60,26 @@ curl -s -X POST http://127.0.0.1:8080/api/intents -H "authorization: Bearer $TOK
 ```
 
 ```bash
+# reject: bad recipient
+curl -s -X POST http://127.0.0.1:8080/api/intents -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"text":"Send 5 MOCK_USDC to 0xEvil"}'
+```
+
+```json
+{
+  "plan_status": "rejected_policy",
+  "summary": "Transfer 5 MOCK_USDC to recipient",
+  "policyCodes": [
+    "recipient_not_allowed"
+  ],
+  "humanMessages": [
+    "step 0 recipient 0xEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee not allowlisted"
+  ]
+}
+```
+
+```bash
 # accept: allowlisted transfer
 curl -s -X POST http://127.0.0.1:8080/api/intents -H "authorization: Bearer $TOKEN" \
   -H 'content-type: application/json' \
