@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 const display = Space_Grotesk({
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body className="min-h-screen bg-canvas font-body antialiased">{children}</body>
+      <body className="min-h-screen bg-canvas font-body antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
