@@ -68,7 +68,7 @@ curl -s -X POST http://127.0.0.1:8080/api/intents -H "authorization: Bearer $TOK
 
 ```json
 {
-  "plan_id": "6a6daf583513e932f7fea9d6",
+  "plan_id": "6a6f100b8af991ff283e8885",
   "plan_status": "awaiting_approval",
   "summary": "Transfer 5 MOCK_USDC to allowlisted recipient",
   "chain": "anvil",
@@ -93,7 +93,7 @@ curl -s -X POST http://127.0.0.1:8080/api/plans/$PLAN_ID/steps/0/approve \
 {
   "plan_status": "completed",
   "step_status": "succeeded",
-  "txHash": "0x597c49cb638c2a65260e70123622a215bcdbe0aa0e7c69914a644c01d564ca0c",
+  "txHash": "0x589c117e30a8c387cf05bbf856732e4bb688d695dbb3a5aedd7c5b4adb0c20a9",
   "dryRunOk": true
 }
 ```
@@ -107,43 +107,43 @@ curl -s "http://127.0.0.1:8080/api/audit?limit=8" -H "authorization: Bearer $TOK
 [
   {
     "type": "plan.completed",
-    "entityId": "6a6daf583513e932f7fea9d6",
-    "createdAt": "2026-08-01T08:33:28.604Z"
+    "entityId": "6a6f100b8af991ff283e8885",
+    "createdAt": "2026-08-02T09:38:24.073Z"
   },
   {
     "type": "step.succeeded",
-    "entityId": "6a6daf583513e932f7fea9d6",
-    "createdAt": "2026-08-01T08:33:28.591Z"
+    "entityId": "6a6f100b8af991ff283e8885",
+    "createdAt": "2026-08-02T09:38:24.064Z"
   },
   {
     "type": "step.approved",
-    "entityId": "6a6daf583513e932f7fea9d6",
-    "createdAt": "2026-08-01T08:33:28.366Z"
+    "entityId": "6a6f100b8af991ff283e8885",
+    "createdAt": "2026-08-02T09:38:19.949Z"
   },
   {
     "type": "plan.awaiting_approval",
-    "entityId": "6a6daf583513e932f7fea9d6",
-    "createdAt": "2026-08-01T08:33:28.280Z"
+    "entityId": "6a6f100b8af991ff283e8885",
+    "createdAt": "2026-08-02T09:38:19.858Z"
   },
   {
     "type": "intent.received",
-    "entityId": "6a6daf583513e932f7fea9d0",
-    "createdAt": "2026-08-01T08:33:28.266Z"
+    "entityId": "6a6f100b8af991ff283e887f",
+    "createdAt": "2026-08-02T09:38:19.840Z"
   },
   {
     "type": "plan.rejected_policy",
-    "entityId": "6a6daf583513e932f7fea9cb",
-    "createdAt": "2026-08-01T08:33:28.221Z"
+    "entityId": "6a6f100b8af991ff283e887a",
+    "createdAt": "2026-08-02T09:38:19.774Z"
   },
   {
     "type": "intent.received",
-    "entityId": "6a6daf583513e932f7fea9c4",
-    "createdAt": "2026-08-01T08:33:28.207Z"
+    "entityId": "6a6f100b8af991ff283e8873",
+    "createdAt": "2026-08-02T09:38:19.739Z"
   },
   {
-    "type": "plan.rejected_policy",
-    "entityId": "6a6daf4a3513e932f7fea9bc",
-    "createdAt": "2026-08-01T08:33:14.227Z"
+    "type": "plan.awaiting_approval",
+    "entityId": "6a6e35da8af991ff283e87d0",
+    "createdAt": "2026-08-01T18:07:22.384Z"
   }
 ]
 ```
