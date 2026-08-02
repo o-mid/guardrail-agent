@@ -3,6 +3,7 @@ import type { PlanV1, Planner } from "./types.js";
 const ALICE = "0x1111111111111111111111111111111111111111";
 const BOB_SOL = "496mWS1YCGE7YVzGzqifoRvzmtgUvgG1Mz3vht22GsSK";
 const EVIL = "0xEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const ROUTER = "MockSwapRouter";
 
 export class MockPlanner implements Planner {
   async plan(input: { intent: string; policySummary: object; chainHint?: string | null }): Promise<PlanV1> {
@@ -20,6 +21,23 @@ export class MockPlanner implements Planner {
             spender: EVIL,
             // decimal string that passes schema, blocked by infinite_approve policy
             amount: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+          },
+        ],
+      };
+    }
+
+    if (text.includes("approve") && (text.includes("router") || text.includes("spender"))) {
+      const amount = pickAmount(text, "50");
+      return {
+        schemaVersion: "1",
+        chain: "anvil",
+        summary: `Approve ${amount} MOCK_USDC for MockSwapRouter`,
+        steps: [
+          {
+            action: "approve",
+            token: "MOCK_USDC",
+            spender: ROUTER,
+            amount,
           },
         ],
       };

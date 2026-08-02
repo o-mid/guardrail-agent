@@ -27,13 +27,16 @@ async function main() {
     console.log("global policy already present v", global.version);
   }
 
-  console.log("chips:");
+  console.log("example intents:");
   for (const c of [
     "Send 5 MOCK_USDC to Alice",
+    "Send 25 MOCK_USDC to Alice",
     "Swap 10 MOCK_USDC for MOCK_ETH",
-    "Approve unlimited MOCK_USDC for 0xEvil",
+    "Approve 50 MOCK_USDC for the router",
     "Send 0.1 SOL to Bob",
+    "Approve unlimited MOCK_USDC for 0xEvil",
     "Transfer 1000 MOCK_USDC to Alice",
+    "Send 5 MOCK_USDC to 0xEvil",
   ]) {
     console.log(" -", c);
   }
