@@ -52,14 +52,18 @@ await shot("04-compose-empty.png");
 
 await pickExample("Approve unlimited MOCK_USDC for 0xEvil");
 await page.getByRole("button", { name: /Create plan/i }).click();
-await page.waitForSelector("text=Infinite approve blocked", { timeout: 20000 });
-await page.waitForSelector("text=infinite_approve", { timeout: 5000 });
+const infiniteReject = page.getByRole("alert").filter({ hasText: "Infinite approve blocked" });
+await infiniteReject.waitFor({ timeout: 20000 });
+await infiniteReject.scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
 await shot("05-reject-infinite-approve.png");
 
 await pickExample("Send 5 MOCK_USDC to 0xEvil");
 await page.getByRole("button", { name: /Create plan/i }).click();
-await page.waitForSelector("text=Recipient not allowlisted", { timeout: 20000 });
-await page.waitForSelector("text=recipient_not_allowed", { timeout: 5000 });
+const recipientReject = page.getByRole("alert").filter({ hasText: "Recipient not allowlisted" });
+await recipientReject.waitFor({ timeout: 20000 });
+await recipientReject.scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
 await shot("06-reject-recipient.png");
 
 await pickExample("Send 5 MOCK_USDC to Alice");
