@@ -33,9 +33,10 @@ services:
       EVM_DEMO_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
       SOLANA_RPC_URL: http://solana:8899
       PLANNER: mock
-      CORS_ORIGINS: http://localhost:3000
-      SIWE_DOMAIN: localhost
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      SIWE_DOMAIN: localhost:3000
       SIWE_URI: http://localhost:3000
+      SIWE_CHAIN_ID: "31337"
     depends_on:
       - mongo
       - policy

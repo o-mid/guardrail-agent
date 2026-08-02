@@ -4,12 +4,15 @@ Natural-language chain intent, schema-checked plan, Go policy gate, human approv
 
 Model output never becomes raw calldata or instruction bytes. Reject paths are part of the product, not edge cases.
 
+**Latest release:** [v0.1.0](https://github.com/o-mid/guardrail-agent/releases/tag/v0.1.0) · [Changelog](docs/CHANGELOG.md)
+
 ## Docs
 
 - [Architecture](docs/architecture.md) - components, trust boundaries, data model
 - [Process](docs/process.md) - happy path, rejects, state machines, audit events
-- [Demo](docs/demo.md) - local setup and interviewer script
+- [Demo](docs/demo.md) - local setup, interviewer script, screenshots
 - [Threat model](docs/threat-model.md) - assets, controls, residual risk
+- [Changelog](docs/CHANGELOG.md)
 
 ## Stack
 

@@ -18,14 +18,11 @@ export async function approveStep(userId: string, planId: string, index: number)
   }
 
   const steps = await PlanStep.find({ planId }).sort({ index: 1 });
-  const step = steps.find((s) => s.index === index);
-  if (!step) return { error: "not_found" as const };
+  const existing = steps.find((s) => s.index === index);
+  if (!existing) return { error: "not_found" as const };
 
-  if (step.status === "succeeded") {
-    return { plan, step, noop: true as const };
-  }
-  if (step.status !== "pending" && step.status !== "failed") {
-    return { error: "step_not_pending" as const };
+  if (existing.status === "succeeded") {
+    return { plan, step: existing, noop: true as const };
   }
   if (index > 0) {
     const prev = steps.find((s) => s.index === index - 1);
@@ -34,8 +31,16 @@ export async function approveStep(userId: string, planId: string, index: number)
     }
   }
 
-  step.status = "approved";
-  await step.save();
+  // Atomic claim — blocks double-approve races that reuse the same Anvil nonce.
+  const step = await PlanStep.findOneAndUpdate(
+    { planId, index, status: { $in: ["pending", "failed"] } },
+    { $set: { status: "approved", error: null } },
+    { new: true },
+  );
+  if (!step) {
+    return { error: "step_not_pending" as const };
+  }
+
   plan.status = "executing";
   await plan.save();
   await AuditEvent.create({

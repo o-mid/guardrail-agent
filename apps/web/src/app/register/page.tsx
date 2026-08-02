@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/Button";
 import { api } from "@/lib/api";
 import { saveTokens } from "@/lib/session";
@@ -36,14 +37,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col justify-center px-6">
-      <div className="mx-auto w-full max-w-md">
-        <Link href="/" className="font-display text-lg font-semibold text-ink hover:text-accent">
-          Guardrail Agent
+    <main className="flex min-h-screen flex-col justify-center px-6 pb-28">
+      <div className="mx-auto w-full max-w-md motion-safe:animate-mark-fade-in">
+        <Link href="/" className="inline-flex items-center gap-2.5">
+          <BrandMark size="sm" />
+          <span className="font-display text-lg font-semibold text-ink hover:text-accent">
+            Guardrail Agent
+          </span>
         </Link>
-        <h1 className="mt-8 font-display text-3xl font-semibold text-ink">Register</h1>
+        <h1 className="mt-8 font-display text-3xl font-semibold tracking-tight text-ink">Register</h1>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} className="mt-6 space-y-4 atmosphere-panel p-5">
           <label className="block text-sm font-medium text-ink">
             Email
             <input
