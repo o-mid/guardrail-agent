@@ -4,6 +4,30 @@ function required(name: string, fallback?: string): string {
   return v;
 }
 
+function hostFromUri(uri: string): string {
+  try {
+    return new URL(uri).host;
+  } catch {
+    return uri;
+  }
+}
+
+const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const siweUri = process.env.SIWE_URI ?? "http://localhost:3000";
+const siweDomain = process.env.SIWE_DOMAIN ?? hostFromUri(siweUri);
+
+/** Domains the client may put in a SIWE message (host[:port]). */
+const siweDomains = Array.from(
+  new Set([
+    siweDomain,
+    ...corsOrigins.map((o) => hostFromUri(o)),
+  ]),
+);
+
 export const config = {
   port: Number(process.env.PORT ?? 8080),
   mongoUri: required("MONGODB_URI", "mongodb://127.0.0.1:27017/guardrail"),
@@ -16,12 +40,11 @@ export const config = {
   solanaDemoKeypairPath: process.env.SOLANA_DEMO_KEYPAIR_PATH ?? "",
   planner: (process.env.PLANNER ?? "mock") as "mock" | "openai",
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
-  corsOrigins: (process.env.CORS_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
-  siweDomain: process.env.SIWE_DOMAIN ?? "localhost",
-  siweUri: process.env.SIWE_URI ?? "http://localhost:3000",
+  corsOrigins,
+  siweDomain,
+  siweUri,
+  siweDomains,
+  siweChainId: Number(process.env.SIWE_CHAIN_ID ?? 31337),
   accessTtlSec: 15 * 60,
   refreshTtlSec: 7 * 24 * 60 * 60,
 };
