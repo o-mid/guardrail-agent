@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.1 — 2026-08-03
+
+### Product
+- Loud reject UX for `recipient_not_allowed` alongside `infinite_approve` (Compose examples, Guide, `PolicyReject` headlines)
+- Demo key vault (`services/vault`): chain private keys leave the API; API requests signatures after HITL
+
+### Docs / demo
+- Architecture + threat model updated for the vault boundary (not threshold MPC)
+- Dual reject interviewer script; screenshot `06-reject-recipient.png`
+
+### Reliability
+- Vault EVM sign payload serializes BigInt fields for JSON
+
 ## v0.1.0 — 2026-08-02
 
 First tagged MVP release for interview demos.

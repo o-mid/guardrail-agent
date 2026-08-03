@@ -49,6 +49,12 @@ API: http://localhost:8080/api/health
 
 Demo login: `demo@guardrail.local` / `demopass123`
 
+## Hosted UI (Vercel)
+
+The Next.js app under `apps/web` deploys to Vercel (root directory `apps/web`).
+
+Set `NEXT_PUBLIC_API_URL` to a publicly reachable Guardrail API. Without that, the landing page still loads; login / compose need the API + policy + vault + local chains (or a hosted backend). CORS / SIWE on the API must allow the Vercel origin.
+
 ## Limits
 
 This is a portfolio / interview demo, not production infrastructure.
