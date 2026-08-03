@@ -164,7 +164,7 @@ export default function ComposePage() {
     <div>
       <PageHeader
         title="Compose"
-        description="Natural language in. Schema-checked plan, Go policy gate, then you approve each step before Anvil or Solana."
+        description="Natural language in. Schema-checked plan, Go policy gate (including loud rejects), then you approve each step before Anvil or Solana."
       />
 
       <section
@@ -222,12 +222,17 @@ export default function ComposePage() {
                 <Ex text="Send 0.05 SOL to Bob" onPick={setText} />.
               </p>
               <p>
-                For the reject demo, force an infinite approve:{" "}
-                <Ex text="Approve unlimited MOCK_USDC for 0xEvil" onPick={setText} />. Over-cap
-                transfers fail the same way —{" "}
-                <Ex text="Transfer 1000 MOCK_USDC to Alice" onPick={setText} /> — and so does a
-                transfer to a non-allowlisted address like{" "}
-                <Ex text="Send 5 MOCK_USDC to 0xEvil" onPick={setText} />.
+                Reject demo A — infinite ERC-20 approve:{" "}
+                <Ex text="Approve unlimited MOCK_USDC for 0xEvil" onPick={setText} />. Policy code{" "}
+                <code className="font-mono text-xs text-ink">infinite_approve</code>. Over-cap
+                amounts fail too: <Ex text="Transfer 1000 MOCK_USDC to Alice" onPick={setText} />.
+              </p>
+              <p>
+                Reject demo B — bad recipient:{" "}
+                <Ex text="Send 5 MOCK_USDC to 0xEvil" onPick={setText} />. Same loud reject surface,
+                different code:{" "}
+                <code className="font-mono text-xs text-ink">recipient_not_allowed</code>. Proves
+                policy is a product, not a single trick.
               </p>
             </div>
           </div>

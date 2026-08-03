@@ -1,25 +1,13 @@
-import { readFileSync } from "node:fs";
 import {
   Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   Transaction,
-  sendAndConfirmTransaction,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { config } from "../config.js";
+import { vaultIdentity, vaultSignSolanaTx } from "../vault/client.js";
 import type { ExecResult } from "../services/execution.js";
-
-function loadKeypair(): Keypair {
-  if (!config.solanaDemoKeypairPath) {
-    const seed = new Uint8Array(32);
-    seed[0] = 7;
-    return Keypair.fromSeed(seed);
-  }
-  const raw = JSON.parse(readFileSync(config.solanaDemoKeypairPath, "utf8")) as number[];
-  return Keypair.fromSecretKey(Uint8Array.from(raw));
-}
 
 export async function executeSolanaStep(payload: Record<string, unknown>): Promise<ExecResult> {
   const action = String(payload.action);
@@ -33,32 +21,39 @@ export async function executeSolanaStep(payload: Record<string, unknown>): Promi
 
   try {
     const connection = new Connection(config.solanaRpcUrl, "confirmed");
-    const payer = loadKeypair();
+    const { solanaPubkey } = await vaultIdentity();
+    const from = new PublicKey(solanaPubkey);
     const to = new PublicKey(String(payload.to));
     const amountSol = Number(payload.amount);
     if (!Number.isFinite(amountSol) || amountSol <= 0) {
       return { ok: false, error: "bad_amount" };
     }
     const lamports = Math.round(amountSol * LAMPORTS_PER_SOL);
-    const { blockhash } = await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     const tx = new Transaction({
-      feePayer: payer.publicKey,
+      feePayer: from,
       recentBlockhash: blockhash,
     }).add(
       SystemProgram.transfer({
-        fromPubkey: payer.publicKey,
+        fromPubkey: from,
         toPubkey: to,
         lamports,
       }),
     );
-    tx.sign(payer);
 
-    const sim = await connection.simulateTransaction(tx);
+    const unsigned = Buffer.from(
+      tx.serialize({ requireAllSignatures: false, verifySignatures: false }),
+    ).toString("base64");
+    const signed = await vaultSignSolanaTx(unsigned);
+    const signedTx = Transaction.from(Buffer.from(signed.transaction, "base64"));
+
+    const sim = await connection.simulateTransaction(signedTx);
     if (sim.value.err) {
       return { ok: false, dryRunOk: false, error: JSON.stringify(sim.value.err) };
     }
 
-    const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
+    const sig = await connection.sendRawTransaction(signedTx.serialize());
+    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight });
     return { ok: true, dryRunOk: true, txHash: sig };
   } catch (err) {
     return { ok: false, dryRunOk: false, error: err instanceof Error ? err.message : String(err) };

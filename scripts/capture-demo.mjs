@@ -17,7 +17,7 @@ const context = await browser.newContext({
 // Keep the guide from covering screenshots unless we want it.
 await context.addInitScript(() => {
   localStorage.setItem(
-    "ga-guide-v2",
+    "ga-guide-v3",
     JSON.stringify({ open: false, step: 0, dismissed: true }),
   );
 });
@@ -52,26 +52,36 @@ await shot("04-compose-empty.png");
 
 await pickExample("Approve unlimited MOCK_USDC for 0xEvil");
 await page.getByRole("button", { name: /Create plan/i }).click();
-await page.waitForSelector("text=Plan rejected", { timeout: 20000 });
-await page.waitForSelector("text=infinite_approve", { timeout: 5000 });
+const infiniteReject = page.getByRole("alert").filter({ hasText: "Infinite approve blocked" });
+await infiniteReject.waitFor({ timeout: 20000 });
+await infiniteReject.scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
 await shot("05-reject-infinite-approve.png");
+
+await pickExample("Send 5 MOCK_USDC to 0xEvil");
+await page.getByRole("button", { name: /Create plan/i }).click();
+const recipientReject = page.getByRole("alert").filter({ hasText: "Recipient not allowlisted" });
+await recipientReject.waitFor({ timeout: 20000 });
+await recipientReject.scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await shot("06-reject-recipient.png");
 
 await pickExample("Send 5 MOCK_USDC to Alice");
 await page.getByRole("button", { name: /Create plan/i }).click();
 const approveBtn = page.getByRole("button", { name: /Approve step/i });
 await approveBtn.waitFor({ timeout: 30000 });
 await page.waitForSelector("text=awaiting approval", { timeout: 5000 });
-await shot("06-plan-review-accept.png");
+await shot("07-plan-review-accept.png");
 
 await approveBtn.click();
 await page.waitForSelector("text=succeeded", { timeout: 45000 });
 await page.waitForTimeout(500);
-await shot("07-step-succeeded.png");
+await shot("08-step-succeeded.png");
 
 await page.goto(`${BASE}/app/audit`, { waitUntil: "networkidle" });
 await page.waitForSelector("text=Audit", { timeout: 10000 });
 await page.waitForTimeout(800);
-await shot("08-audit.png");
+await shot("09-audit.png");
 
 // Guide overlay shot — reopen from the floating control
 await page.getByRole("button", { name: "Open guide" }).click();
@@ -80,7 +90,7 @@ await page.waitForSelector("#guide-panel", { timeout: 10000 });
 const composeStep = page.getByRole("button", { name: /Step 3: Compose/i });
 if (await composeStep.count()) await composeStep.click();
 await page.waitForTimeout(400);
-await shot("09-operator-guide.png");
+await shot("10-operator-guide.png");
 
 await browser.close();
 console.log("screenshots done");

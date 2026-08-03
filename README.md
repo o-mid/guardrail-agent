@@ -19,8 +19,9 @@ Model output never becomes raw calldata or instruction bytes. Reject paths are p
 | Path | Role |
 |------|------|
 | `apps/web` | Next.js + Tailwind UI |
-| `services/api` | Express + Mongo orchestration and executors |
+| `services/api` | Express + Mongo orchestration and executors (no chain keys) |
 | `services/policy` | Go JSON Schema + policy rules |
+| `services/vault` | Demo key vault (signs after HITL; not threshold MPC) |
 | `packages/plan-schema` | Shared plan schema |
 | `packages/evals` | Accept/reject fixtures against policy |
 | `contracts` | Foundry mocks for Anvil |
@@ -53,11 +54,11 @@ Demo login: `demo@guardrail.local` / `demopass123`
 This is a portfolio / interview demo, not production infrastructure.
 
 - Local Anvil and solana-test-validator only by default
-- No custodial key management, no mainnet defaults
+- Demo key vault holds keys; not real threshold MPC / HSM, no mainnet defaults
 - MockPlanner is the zero-key default; LLM planner is env-gated and still policy-checked
-- Express + Mongo here on purpose for full-stack JD coverage; Go owns policy only
-- If the API is compromised, policy could be skipped at the orchestration layer (see threat model)
+- Express + Mongo here on purpose for full-stack JD coverage; Go owns policy; vault owns signing
+- If the API is compromised, policy could be skipped and the vault can still be asked to sign (see threat model)
 
 ## CI
 
-GitHub Actions: Go policy tests, API typecheck, Forge tests, Next typecheck, eval fixtures against the policy service.
+GitHub Actions: Go policy tests, API + vault typecheck, Forge tests, Next typecheck, eval fixtures against the policy service.

@@ -2,11 +2,12 @@ import crypto from "node:crypto";
 import { Router } from "express";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-import { Wallet, verifyMessage } from "ethers";
+import { verifyMessage } from "ethers";
 import { SiweMessage } from "siwe";
 import { z } from "zod";
 import { config } from "../config.js";
 import { SiweNonce, User } from "../models/index.js";
+import { vaultIdentity, vaultSignEvmMessage } from "../vault/client.js";
 import { issuePair, publicUser } from "./auth.js";
 
 export const walletAuthRouter = Router();
@@ -147,25 +148,25 @@ walletAuthRouter.post("/auth/siwe/verify", async (req, res) => {
 });
 
 /**
- * Local demo helper: sign SIWE with the configured Anvil demo key (no browser wallet).
- * Disabled unless EVM_DEMO_PRIVATE_KEY is set.
+ * Local demo helper: SIWE signed by the demo key vault (no browser wallet, no key in API).
+ * Disabled unless VAULT_URL is configured.
  */
 walletAuthRouter.post("/auth/siwe/demo", async (req, res) => {
-  if (!config.evmDemoPrivateKey) {
+  if (!config.vaultUrl) {
     res.status(404).json({ error: "demo_siwe_disabled" });
     return;
   }
   try {
-    const wallet = new Wallet(config.evmDemoPrivateKey);
     const params = siweParamsForOrigin(req.get("origin") ?? undefined);
     const nonce = crypto.randomBytes(16).toString("hex");
     await SiweNonce.create({
       nonce,
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
+    const { evmAddress } = await vaultIdentity();
     const msg = new SiweMessage({
       domain: params.domain,
-      address: wallet.address,
+      address: evmAddress,
       statement: "Sign in to Guardrail Agent",
       uri: params.uri,
       version: "1",
@@ -173,7 +174,7 @@ walletAuthRouter.post("/auth/siwe/demo", async (req, res) => {
       nonce,
     });
     const message = msg.prepareMessage();
-    const signature = await wallet.signMessage(message);
+    const { signature } = await vaultSignEvmMessage(message);
     const out = await completeSiweLogin(message, signature);
     if (!out.ok) {
       res.status(out.status).json({ error: out.error, detail: out.detail });

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BrandMark } from "./BrandMark";
 
-const STORAGE_KEY = "ga-guide-v2";
+const STORAGE_KEY = "ga-guide-v3";
 
 type GuideStep = {
   id: string;
@@ -52,9 +52,16 @@ const STEPS: GuideStep[] = [
     hrefLabel: "Compose",
   },
   {
-    id: "reject",
-    title: "Reject path",
-    body: "Try “Approve unlimited MOCK_USDC for 0xEvil”. Infinite approve is blocked — loud reject, no chain write.",
+    id: "reject-infinite",
+    title: "Reject: infinite approve",
+    body: "Try “Approve unlimited MOCK_USDC for 0xEvil”. Code infinite_approve — loud banner, no Approve, no chain write.",
+    href: "/app/compose",
+    hrefLabel: "Compose",
+  },
+  {
+    id: "reject-recipient",
+    title: "Reject: bad recipient",
+    body: "Then “Send 5 MOCK_USDC to 0xEvil”. Code recipient_not_allowed — same reject UX, different rule. Policy is a product.",
     href: "/app/compose",
     hrefLabel: "Compose",
   },

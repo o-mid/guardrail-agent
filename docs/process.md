@@ -53,14 +53,22 @@ Same pipeline through step 4, but policy returns a code:
 2. MockPlanner emits a plan with action `approve`, token `MOCK_USDC`, and a max-uint decimal amount string. This passes JSON Schema (amount is a valid decimal string).
 3. Go policy runs `forbidInfiniteApprove` and returns `infinite_approve`.
 4. API sets intent to `rejected_policy`, creates a plan with status `rejected_policy`, stores codes in `rejectionReasons`. Audit: `plan.rejected_policy`.
-5. No steps are created. UI shows policy codes via `PolicyReject`. User cannot approve.
+5. No steps are created. UI shows a code-specific loud banner via `PolicyReject`. User cannot approve.
 
 The executor also blocks infinite approve strings as a second line of defense (`infinite_approve_blocked_at_executor`), but the demo is meant to fail at policy before anyone clicks Approve.
 
-Other reject examples from seed chips:
+## Reject path (bad recipient)
+
+1. User submits `Send 5 MOCK_USDC to 0xEvil`.
+2. MockPlanner emits a transfer to a non-allowlisted address.
+3. Go policy returns `recipient_not_allowed`.
+4. Same terminal plan status and loud UI as infinite approve — different code and headline.
+5. Interview point: policy is a product with multiple first-class reject paths, not a single trick.
+
+Other reject examples:
 
 - `Transfer 1000 MOCK_USDC to Alice` hits `amount_over_cap` (default cap is 100).
-- Wrong recipient or token hits `recipient_not_allowed` or `mint_not_allowed`.
+- Wrong mint hits `mint_not_allowed`.
 - Malformed plan hits `rejected_schema` with schema error paths.
 
 ## State machines

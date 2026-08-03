@@ -10,6 +10,7 @@ flowchart LR
   Web[Next.js web]
   API[Express API]
   Policy[Go policy service]
+  Vault[Demo key vault]
   Mongo[(MongoDB)]
   Anvil[Anvil EVM]
   Solana[solana-test-validator]
@@ -20,21 +21,23 @@ flowchart LR
   API --> Mongo
   API -->|POST /v1/validate| Policy
   Planner -.->|plan JSON| API
-  API -->|ethers.js| Anvil
-  API -->|web3.js| Solana
+  API -->|sign request| Vault
+  API -->|broadcast| Anvil
+  API -->|broadcast| Solana
 ```
 
-The web app is a thin client. It does not talk to chains directly. All orchestration, persistence, and signing happen in the API. Policy is a separate process so schema and rule checks are not buried inside Express route handlers.
+The web app is a thin client. It does not talk to chains directly. Orchestration and persistence live in the API. Private keys live in the demo vault process only — the API builds unsigned txs, asks the vault to sign after HITL, then broadcasts. Policy is a separate process so schema and rule checks are not buried inside Express route handlers.
 
 ## Service responsibilities
 
 | Component | Role |
 |-----------|------|
 | **Web** (`apps/web`) | Login, compose intent, view plan steps, approve/reject, audit timeline. Reads/writes via REST. Subscribes to SSE for live step updates. |
-| **Express API** (`services/api`) | Auth (email/password, optional SIWE), intent pipeline, plan CRUD, step approval, audit log, chain executors. Owns MongoDB. Calls policy on every new plan. |
+| **Express API** (`services/api`) | Auth (email/password, optional SIWE), intent pipeline, plan CRUD, step approval, audit log, chain executors. Owns MongoDB. Calls policy on every new plan. Does not hold chain private keys. |
 | **Go policy** (`services/policy`) | Stateless HTTP service. Validates plan JSON against JSON Schema, then applies allowlists and caps from the policy document. Returns machine codes and human messages. |
+| **Demo vault** (`services/vault`) | Holds Anvil / Solana demo keys. Signs EVM txs/messages and Solana txs over a local Bearer token. Not threshold MPC — production analog is MPC/HSM. |
 | **MongoDB** | Users, refresh tokens, policy versions, intents, plans, plan steps, audit events, SIWE nonces. |
-| **Anvil** | Local EVM (chain id 31337). Mock ERC-20 tokens and a swap router deployed via Foundry. API signs with a demo private key from compose env. |
+| **Anvil** | Local EVM (chain id 31337). Mock ERC-20 tokens and a swap router deployed via Foundry. |
 | **Solana test validator** | Local Solana RPC. MVP executor supports native SOL transfer only. |
 
 ## Trust boundaries
@@ -43,10 +46,11 @@ The web app is a thin client. It does not talk to chains directly. All orchestra
 |------|-------------|-------|
 | MockPlanner / LLM | Untrusted | Output is structural JSON only. Never trusted for amounts, recipients, or bytes. |
 | Next.js client | Untrusted | Can be tampered with. Server re-checks ownership and plan state on every approve. |
-| Express API | Trusted orchestration | Gates execution. Holds demo keys in env. If compromised, policy could be bypassed at this layer. |
+| Express API | Trusted orchestration | Gates execution. No chain private keys in process env. If compromised, it can still request signatures from the vault. |
+| Demo vault | Trusted signing | Keys stay here. Narrow sign APIs only. Local demo token auth. |
 | Go policy service | Trusted decisioning | Schema + rules. No chain access. |
 | MongoDB | Trusted store | Not exposed publicly. Strict Mongoose schemas. |
-| Anvil / Solana RPC | Local demo only | Default keys. Do not point at mainnet. |
+| Anvil / Solana RPC | Local demo only | Do not point at mainnet. |
 
 See also [threat-model.md](threat-model.md).
 
@@ -87,6 +91,8 @@ Plans always store `rawModelJson` for debugging and audit, even when rejected.
 **Express + Mongo:** Deliberate for a portfolio full-stack shape. Auth, CRUD, SSE, and orchestration fit fine here. Not claiming this is the production choice for high-volume trading.
 
 **Go for policy:** Schema compilation and rule evaluation are isolated, testable, and fast. The API stays dumb about rule details: it forwards JSON and stores the result. Policy codes (`infinite_approve`, `recipient_not_allowed`, etc.) are stable contracts for the UI and eval fixtures.
+
+**Vault for keys:** Demo keys moved out of the API so a compromised orchestrator is not automatically a key dump. Still a single-process signer with a shared token — not multi-party computation. Talk track: "MPC-shaped boundary; production would swap this for Fireblocks-style MPC or an HSM."
 
 **Next.js + Tailwind:** Standard React app shell. No chain SDK in the browser.
 
