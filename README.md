@@ -49,13 +49,16 @@ API: http://localhost:8080/api/health
 
 Demo login: `demo@guardrail.local` / `demopass123`
 
-## Hosted UI (Vercel)
+## Hosted demo
 
-Live: https://guardrail-agent-six.vercel.app
+| Layer | URL |
+|-------|-----|
+| UI (Vercel) | https://guardrail-agent-six.vercel.app |
+| API (Railway) | https://api-production-3231.up.railway.app |
 
-The Next.js app under `apps/web` deploys to Vercel (project root directory `apps/web`).
+Stack on Railway: MongoDB + Go policy + demo vault + Anvil (+ contract deploy on boot) + Express API. `NEXT_PUBLIC_API_URL` on Vercel points at the Railway API. Demo login: `demo@guardrail.local` / `demopass123`.
 
-Set `NEXT_PUBLIC_API_URL` to a publicly reachable Guardrail API. Without that, the landing page still loads; login / compose need the API + policy + vault + local chains (or a hosted backend). CORS / SIWE on the API must allow the Vercel origin.
+Local Docker Compose remains the primary way to develop; Railway is for the always-on interview demo.
 
 ## Limits
 
