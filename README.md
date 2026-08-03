@@ -51,7 +51,9 @@ Demo login: `demo@guardrail.local` / `demopass123`
 
 ## Hosted UI (Vercel)
 
-The Next.js app under `apps/web` deploys to Vercel (root directory `apps/web`).
+Live: https://guardrail-agent-six.vercel.app
+
+The Next.js app under `apps/web` deploys to Vercel (project root directory `apps/web`).
 
 Set `NEXT_PUBLIC_API_URL` to a publicly reachable Guardrail API. Without that, the landing page still loads; login / compose need the API + policy + vault + local chains (or a hosted backend). CORS / SIWE on the API must allow the Vercel origin.
 

@@ -39,3 +39,6 @@ contracts/lib/
 
 # OS
 Thumbs.db
+
+# Vercel CLI local link
+.vercel
