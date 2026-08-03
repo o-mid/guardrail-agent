@@ -1,0 +1,15 @@
+FROM ghcr.io/foundry-rs/foundry:latest
+
+USER root
+WORKDIR /contracts
+COPY contracts/foundry.toml ./
+COPY contracts/src ./src
+COPY contracts/script ./script
+COPY deploy/anvil/entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh \
+  && forge install foundry-rs/forge-std --no-git \
+  && forge build
+
+EXPOSE 8545
+ENTRYPOINT ["/entrypoint.sh"]

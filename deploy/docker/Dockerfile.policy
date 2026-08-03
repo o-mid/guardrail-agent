@@ -1,0 +1,17 @@
+FROM golang:1.22-alpine AS build
+WORKDIR /src
+COPY services/policy/go.mod services/policy/go.sum* ./
+RUN go mod download
+COPY services/policy/ .
+RUN CGO_ENABLED=0 go build -o /out/policy ./cmd/policy
+
+FROM alpine:3.20
+WORKDIR /app
+COPY --from=build /out/policy /app/policy
+COPY services/policy/config /config
+COPY services/policy/internal/schema /app/internal/schema
+EXPOSE 8090
+ENV PORT=8090
+ENV POLICY_DEFAULTS_PATH=/config/default-policy.json
+ENV PLAN_SCHEMA_PATH=/app/internal/schema/plan.schema.json
+CMD ["/app/policy"]

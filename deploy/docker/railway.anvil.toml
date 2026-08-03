@@ -1,0 +1,7 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/docker/Dockerfile.anvil"
+watchPatterns = ["contracts/**", "deploy/anvil/**", "deploy/docker/Dockerfile.anvil"]
+
+[deploy]
+restartPolicyType = "ON_FAILURE"

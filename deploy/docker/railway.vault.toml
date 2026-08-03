@@ -1,0 +1,9 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/docker/Dockerfile.vault"
+watchPatterns = ["services/vault/**", "deploy/docker/Dockerfile.vault"]
+
+[deploy]
+healthcheckPath = "/healthz"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"

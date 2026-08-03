@@ -1,0 +1,9 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/docker/Dockerfile.policy"
+watchPatterns = ["services/policy/**", "deploy/docker/Dockerfile.policy"]
+
+[deploy]
+healthcheckPath = "/healthz"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"

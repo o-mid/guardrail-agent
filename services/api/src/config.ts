@@ -30,7 +30,10 @@ const siweDomains = Array.from(
 
 export const config = {
   port: Number(process.env.PORT ?? 8080),
-  mongoUri: required("MONGODB_URI", "mongodb://127.0.0.1:27017/guardrail"),
+  mongoUri: required(
+    "MONGODB_URI",
+    process.env.MONGO_URL ?? "mongodb://127.0.0.1:27017/guardrail",
+  ),
   jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access"),
   jwtRefreshSecret: required("JWT_REFRESH_SECRET", "dev-refresh"),
   policyServiceUrl: required("POLICY_SERVICE_URL", "http://127.0.0.1:8090"),

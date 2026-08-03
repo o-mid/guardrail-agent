@@ -20,11 +20,19 @@ const fallback: AnvilDeployment = {
 };
 
 export function loadAnvilDeployment(): AnvilDeployment {
-  try {
-    const here = path.dirname(fileURLToPath(import.meta.url));
-    const p = path.resolve(here, "../../../../contracts/deployments/anvil.json");
-    return JSON.parse(readFileSync(p, "utf8")) as AnvilDeployment;
-  } catch {
-    return fallback;
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    process.env.ANVIL_DEPLOYMENT_PATH,
+    "/contracts/deployments/anvil.json",
+    path.resolve(here, "../../../../contracts/deployments/anvil.json"),
+  ].filter(Boolean) as string[];
+
+  for (const p of candidates) {
+    try {
+      return JSON.parse(readFileSync(p, "utf8")) as AnvilDeployment;
+    } catch {
+      // try next
+    }
   }
+  return fallback;
 }
