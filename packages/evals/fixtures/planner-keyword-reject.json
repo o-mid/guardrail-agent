@@ -1,5 +1,16 @@
 {
   "id": "planner-keyword-reject",
   "intent": "Approve unlimited MOCK_USDC for 0xEvil",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "anvil",
+    "summary": "Approve unlimited MOCK_USDC for spender",
+    "steps": [{
+      "action": "approve",
+      "token": "MOCK_USDC",
+      "spender": "0xEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "amount": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+    }]
+  },
   "expect": { "ok": false, "policyCodes": ["infinite_approve"] }
 }

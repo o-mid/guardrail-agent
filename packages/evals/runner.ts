@@ -1,8 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { MockPlanner } from "../../services/api/src/planner/mock.ts";
-import { defaultRules } from "../../services/api/src/policy/client.ts";
 
 type Fixture = {
   id: string;
@@ -20,12 +18,13 @@ type Fixture = {
 const policyUrl = process.env.POLICY_SERVICE_URL ?? "http://127.0.0.1:8090";
 const root = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(root, "fixtures");
+const policyPath = path.join(root, "../../services/policy/config/default-policy.json");
 
-async function validate(plan: unknown) {
+async function validate(plan: unknown, policy: unknown) {
   const r = await fetch(`${policyUrl}/v1/validate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan, policy: { version: 1, rules: defaultRules } }),
+    body: JSON.stringify({ plan, policy }),
   });
   if (!r.ok) throw new Error(`policy ${r.status}`);
   return (await r.json()) as {
@@ -37,22 +36,19 @@ async function validate(plan: unknown) {
 
 async function main() {
   const files = (await readdir(fixturesDir)).filter((f) => f.endsWith(".json")).sort();
-  const planner = new MockPlanner();
+  const policy = JSON.parse(await readFile(policyPath, "utf8"));
   let failed = 0;
 
   for (const file of files) {
     const fx = JSON.parse(await readFile(path.join(fixturesDir, file), "utf8")) as Fixture;
-    let plan = fx.plan;
-    if (!plan && fx.intent) {
-      plan = await planner.plan({ intent: fx.intent, policySummary: defaultRules });
-    }
+    const plan = fx.plan;
     if (!plan) {
       console.error("FAIL", fx.id, "no plan");
       failed++;
       continue;
     }
 
-    const result = await validate(plan);
+    const result = await validate(plan, policy);
     const problems: string[] = [];
 
     if (result.ok !== fx.expect.ok) problems.push(`ok=${result.ok} want=${fx.expect.ok}`);

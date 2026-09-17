@@ -1,5 +1,16 @@
 {
   "id": "happy-solana-transfer",
   "intent": "Send 0.1 SOL to Bob",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "solana-local",
+    "summary": "Transfer 0.1 SOL to allowlisted pubkey",
+    "steps": [{
+      "action": "transfer",
+      "mint": "SOL",
+      "to": "496mWS1YCGE7YVzGzqifoRvzmtgUvgG1Mz3vht22GsSK",
+      "amount": "0.1"
+    }]
+  },
   "expect": { "ok": true, "chain": "solana-local", "action": "transfer" }
 }
