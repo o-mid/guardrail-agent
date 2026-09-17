@@ -1,8 +1,28 @@
 import { AuditEvent, Intent, Plan, PlanStep, Policy } from "../models/index.js";
 import { createPlanner } from "../planner/index.js";
+import type { Planner, PlannerUsage } from "../planner/types.js";
 import { defaultRules, validatePlan, type PolicyRules } from "../policy/client.js";
 
-const planner = createPlanner();
+let planner: Planner = createPlanner();
+
+export function setPlanner(next: Planner): void {
+  planner = next;
+}
+
+type PlannerCost = {
+  plannerLatencyMs: number;
+  plannerModel: string | null;
+  usage: PlannerUsage | null;
+};
+
+function plannerCost(latencyMs: number): PlannerCost {
+  const meta = planner.lastCall?.() ?? {};
+  return {
+    plannerLatencyMs: latencyMs,
+    plannerModel: meta.model ?? null,
+    usage: meta.usage ?? null,
+  };
+}
 
 export async function createIntentFlow(userId: string, text: string, chainHint?: string | null) {
   const intent = await Intent.create({
@@ -19,6 +39,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
   });
 
   const policy = await loadPolicy(userId);
+  const started = performance.now();
   let planJson;
   try {
     planJson = await planner.plan({
@@ -27,7 +48,11 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       chainHint,
     });
   } catch (err) {
+    const cost = plannerCost(Math.round(performance.now() - started));
     intent.status = "planner_unavailable";
+    intent.plannerLatencyMs = cost.plannerLatencyMs;
+    intent.plannerModel = cost.plannerModel;
+    intent.usage = cost.usage;
     await intent.save();
     await AuditEvent.create({
       type: "intent.planner_unavailable",
@@ -37,12 +62,16 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     });
     return { intent, plan: null };
   }
+  const cost = plannerCost(Math.round(performance.now() - started));
 
   let validation;
   try {
     validation = await validatePlan(planJson, { version: policy.version, rules: policy.rules });
   } catch (err) {
     intent.status = "planner_unavailable";
+    intent.plannerLatencyMs = cost.plannerLatencyMs;
+    intent.plannerModel = cost.plannerModel;
+    intent.usage = cost.usage;
     await intent.save();
     await AuditEvent.create({
       type: "intent.policy_unreachable",
@@ -71,6 +100,9 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       rawModelJson: planJson,
       rejectionReasons: [...policyCodes, ...schemaErrors],
       policyVersion: policy.version,
+      plannerLatencyMs: cost.plannerLatencyMs,
+      plannerModel: cost.plannerModel,
+      usage: cost.usage,
     });
     await AuditEvent.create({
       type: schemaFail ? "plan.rejected_schema" : "plan.rejected_policy",
@@ -99,6 +131,9 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     rawModelJson: planJson,
     rejectionReasons: [],
     policyVersion: policy.version,
+    plannerLatencyMs: cost.plannerLatencyMs,
+    plannerModel: cost.plannerModel,
+    usage: cost.usage,
   });
 
   await PlanStep.insertMany(

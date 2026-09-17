@@ -10,10 +10,18 @@ export type AuditEvent = {
   payload?: Record<string, unknown>;
 };
 
+export type PlannerUsage = {
+  promptTokens: number;
+  completionTokens: number;
+};
+
 export type PlanIntent = {
   _id: string;
   text?: string;
   status: string;
+  plannerLatencyMs?: number | null;
+  plannerModel?: string | null;
+  usage?: PlannerUsage | null;
 };
 
 function authHeader(token?: string | null): HeadersInit {

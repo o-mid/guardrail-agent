@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PolicyReject } from "@/components/PolicyReject";
 import { StatusPill } from "@/components/StatusPill";
 import { StepRow, type StepDetail } from "@/components/StepRow";
-import { api, type AuditEvent, type PlanIntent } from "@/lib/api";
+import { api, type AuditEvent, type PlanIntent, type PlannerUsage } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import { usePlanStream } from "@/lib/usePlanStream";
 
@@ -19,6 +19,9 @@ type Plan = {
   policyVersion?: number;
   schemaVersion?: string;
   rejectionReasons?: string[];
+  plannerLatencyMs?: number | null;
+  plannerModel?: string | null;
+  usage?: PlannerUsage | null;
 };
 
 type Tone = "neutral" | "accent" | "danger" | "warn";
@@ -124,6 +127,16 @@ function rejectFromTrail(events: AuditEvent[], fallback: string[]): {
   return { policyCodes, schemaErrors, humanMessages };
 }
 
+function plannerCostLine(plan: Plan): string | null {
+  const bits: string[] = [];
+  if (typeof plan.plannerLatencyMs === "number") bits.push(`${plan.plannerLatencyMs}ms`);
+  if (plan.plannerModel) bits.push(plan.plannerModel);
+  if (plan.usage && typeof plan.usage.promptTokens === "number") {
+    bits.push(`${plan.usage.promptTokens} prompt / ${plan.usage.completionTokens} completion`);
+  }
+  return bits.length ? bits.join(" · ") : null;
+}
+
 function parseEvent(raw: string): string {
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
@@ -185,6 +198,7 @@ export default function PlanFeedPage() {
   const rejected = plan.status.startsWith("rejected");
   const reject = rejectFromTrail(auditEvents, plan.rejectionReasons ?? []);
   const plannerLine = `${plan.chain} · ${steps.length} step${steps.length === 1 ? "" : "s"}`;
+  const costLine = plannerCostLine(plan);
 
   return (
     <div>
@@ -240,6 +254,9 @@ export default function PlanFeedPage() {
           {plan.schemaVersion ? ` · schema ${plan.schemaVersion}` : ""}
           {rejected ? " · gated (did not execute)" : ""}
         </p>
+        {costLine ? (
+          <p className="mt-1 font-mono text-xs text-ink-muted">{costLine}</p>
+        ) : null}
       </section>
 
       <section aria-label="Step machine">
