@@ -24,6 +24,15 @@ plansRouter.post("/plans/:id/steps/:index/approve", requireAuth, async (req: Aut
   const result = await approveStep(req.userId!, req.params.id, index);
   if ("error" in result) {
     const status = result.error === "not_found" ? 404 : 409;
+    if (result.error === "rejected_policy") {
+      res.status(status).json({
+        error: result.error,
+        policyCodes: result.policyCodes,
+        schemaErrors: result.schemaErrors,
+        humanMessages: result.humanMessages,
+      });
+      return;
+    }
     res.status(status).json({ error: result.error });
     return;
   }

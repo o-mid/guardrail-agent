@@ -1,5 +1,7 @@
 import { AuditEvent, Plan, PlanStep } from "../models/index.js";
+import { validatePlan } from "../policy/client.js";
 import { publishPlanEvent } from "../sse/hub.js";
+import { loadPolicy } from "./intentPipeline.js";
 
 export type ExecResult = { ok: boolean; txHash?: string; error?: string; dryRunOk?: boolean };
 
@@ -8,6 +10,27 @@ let runner: ((planId: string, stepIndex: number) => Promise<ExecResult>) | null 
 
 export function setStepRunner(fn: (planId: string, stepIndex: number) => Promise<ExecResult>): void {
   runner = fn;
+}
+
+export function storedPlanJson(
+  plan: { schemaVersion: string; chain: string; summary: string },
+  steps: Array<{ index: number; payload: unknown }>,
+) {
+  return {
+    schemaVersion: plan.schemaVersion,
+    chain: plan.chain,
+    summary: plan.summary,
+    steps: [...steps].sort((a, b) => a.index - b.index).map((s) => s.payload),
+  };
+}
+
+export async function recheckPlanPolicy(
+  userId: string,
+  plan: { schemaVersion: string; chain: string; summary: string },
+  steps: Array<{ index: number; payload: unknown }>,
+) {
+  const policy = await loadPolicy(userId);
+  return validatePlan(storedPlanJson(plan, steps), { version: policy.version, rules: policy.rules });
 }
 
 export async function approveStep(userId: string, planId: string, index: number) {
@@ -29,6 +52,45 @@ export async function approveStep(userId: string, planId: string, index: number)
     if (!prev || prev.status !== "succeeded") {
       return { error: "previous_step_incomplete" as const };
     }
+  }
+
+  let validation;
+  try {
+    validation = await recheckPlanPolicy(userId, plan, steps);
+  } catch (err) {
+    await AuditEvent.create({
+      type: "step.policy_unreachable",
+      entityId: plan.id,
+      userId,
+      payload: { index, error: String(err) },
+    });
+    publishPlanEvent(userId, plan.id, "step", {
+      type: "policy_unreachable",
+      index,
+      status: plan.status,
+    });
+    return { error: "policy_unreachable" as const };
+  }
+
+  const policyCodes = validation.policyCodes ?? [];
+  const schemaErrors = validation.schemaErrors ?? [];
+  const humanMessages = validation.humanMessages ?? [];
+  if (!validation.ok) {
+    await AuditEvent.create({
+      type: "step.rejected_policy",
+      entityId: plan.id,
+      userId,
+      payload: { index, policyCodes, schemaErrors, humanMessages },
+    });
+    publishPlanEvent(userId, plan.id, "step", {
+      type: "policy_rejected",
+      index,
+      policyCodes,
+      schemaErrors,
+      humanMessages,
+      status: plan.status,
+    });
+    return { error: "rejected_policy" as const, policyCodes, schemaErrors, humanMessages };
   }
 
   // Atomic claim — blocks double-approve races that reuse the same Anvil nonce.
