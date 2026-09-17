@@ -77,7 +77,7 @@ describe("openai planner recordings", { concurrency: false }, () => {
       intent: "Send 5 MOCK_USDC to Alice",
       policySummary: { maxAmount: "100" },
     });
-    const call = planner.lastCall();
+    const call = planner.lastPlannerMeta();
     assert.equal(call.model, "gpt-4o-mini");
     assert.equal(call.usage?.promptTokens, 247);
     assert.equal(call.usage?.completionTokens, 61);
@@ -93,7 +93,7 @@ describe("openai planner recordings", { concurrency: false }, () => {
       () => planner.plan({ intent: "transfer with extra keys", policySummary: {} }),
       /planner schema/,
     );
-    const call = planner.lastCall();
+    const call = planner.lastPlannerMeta();
     assert.equal(call.model, "gpt-4o-mini");
     assert.equal(call.usage?.promptTokens, 251);
     assert.equal(call.usage?.completionTokens, 73);
