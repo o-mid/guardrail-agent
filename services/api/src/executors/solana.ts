@@ -7,9 +7,12 @@ import {
 } from "@solana/web3.js";
 import { config } from "../config.js";
 import { vaultIdentity, vaultSignSolanaTx } from "../vault/client.js";
-import type { ExecResult } from "../services/execution.js";
+import { vaultPolicyGate, type ExecResult, type StoredPlanForPolicy } from "../services/execution.js";
 
-export async function executeSolanaStep(payload: Record<string, unknown>): Promise<ExecResult> {
+export async function executeSolanaStep(
+  payload: Record<string, unknown>,
+  stored: StoredPlanForPolicy,
+): Promise<ExecResult> {
   const action = String(payload.action);
   if (action !== "transfer") {
     return { ok: false, error: `unsupported_action_${action}` };
@@ -20,6 +23,9 @@ export async function executeSolanaStep(payload: Record<string, unknown>): Promi
   }
 
   try {
+    const blockedEarly = await vaultPolicyGate(stored);
+    if (blockedEarly) return blockedEarly;
+
     const connection = new Connection(config.solanaRpcUrl, "confirmed");
     const { solanaPubkey } = await vaultIdentity();
     const from = new PublicKey(solanaPubkey);
@@ -44,6 +50,8 @@ export async function executeSolanaStep(payload: Record<string, unknown>): Promi
     const unsigned = Buffer.from(
       tx.serialize({ requireAllSignatures: false, verifySignatures: false }),
     ).toString("base64");
+    const blocked = await vaultPolicyGate(stored);
+    if (blocked) return blocked;
     const signed = await vaultSignSolanaTx(unsigned);
     const signedTx = Transaction.from(Buffer.from(signed.transaction, "base64"));
 

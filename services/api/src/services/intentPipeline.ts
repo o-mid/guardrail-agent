@@ -124,7 +124,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
   return { intent, plan, validation };
 }
 
-async function loadPolicy(userId: string): Promise<{ version: number; rules: PolicyRules }> {
+export async function loadPolicy(userId: string): Promise<{ version: number; rules: PolicyRules }> {
   const userPolicy = await Policy.findOne({ scope: userId }).sort({ version: -1 });
   if (userPolicy) {
     return { version: userPolicy.version, rules: userPolicy.rules as PolicyRules };
