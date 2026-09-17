@@ -16,10 +16,10 @@ export type StoredPlanForPolicy = {
 };
 
 // filled in by chain executors in later commits
-let runner: ((planId: string, stepIndex: number) => Promise<ExecResult>) | null = null;
+let stepExecutor: ((planId: string, stepIndex: number) => Promise<ExecResult>) | null = null;
 
-export function setStepRunner(fn: (planId: string, stepIndex: number) => Promise<ExecResult>): void {
-  runner = fn;
+export function installStepExecutor(fn: (planId: string, stepIndex: number) => Promise<ExecResult>): void {
+  stepExecutor = fn;
 }
 
 export function storedPlanJson(
@@ -164,8 +164,8 @@ export async function approveStep(userId: string, planId: string, index: number)
   await step.save();
 
   let result: ExecResult;
-  if (runner) {
-    result = await runner(plan.id, index);
+  if (stepExecutor) {
+    result = await stepExecutor(plan.id, index);
   } else {
     // local stub until chain executors land
     result = { ok: true, dryRunOk: true, txHash: `stub-${plan.id}-${index}` };

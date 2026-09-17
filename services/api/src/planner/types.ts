@@ -17,5 +17,5 @@ export type PlannerCallMeta = {
 
 export interface Planner {
   plan(input: { intent: string; policySummary: object; chainHint?: string | null }): Promise<PlanV1>;
-  lastCall?(): PlannerCallMeta;
+  lastPlannerMeta?(): PlannerCallMeta;
 }

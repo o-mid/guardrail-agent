@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import { FROZEN_DENIES, formatFail, frozenFailures, mismatches } from "./compare.ts";
 
 describe("eval expected vs actual", () => {
@@ -47,5 +50,12 @@ describe("frozen deny contract", () => {
     ]);
     const errors = frozenFailures(ids, actual);
     assert.ok(errors.some((e) => e.includes("policy-infinite-approve") && e.includes("started passing")));
+  });
+
+  it("fails the unit suite if a frozen fixture file is deleted", () => {
+    const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
+    for (const frozen of FROZEN_DENIES) {
+      assert.equal(existsSync(path.join(dir, `${frozen.id}.json`)), true, frozen.id);
+    }
   });
 });

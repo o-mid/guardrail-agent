@@ -1,8 +1,8 @@
 # Guardrail Agent
 
-Natural-language chain intent, schema-checked plan, Go policy gate, human approve per step, dry-run then execute on local EVM (Anvil) and Solana (test validator).
+Type an intent. The planner returns JSON. Go policy accepts or rejects it. A human approves each step, then the API dry-runs and broadcasts on local Anvil or solana-test-validator.
 
-Model output never becomes raw calldata or instruction bytes. Reject paths are part of the product, not edge cases.
+The model never emits calldata or instruction bytes. A max-uint approve and a wrong recipient stop at policy, with a loud UI.
 
 **Latest release:** [v0.1.0](https://github.com/o-mid/guardrail-agent/releases/tag/v0.1.0) · [Changelog](docs/CHANGELOG.md)
 
@@ -57,24 +57,24 @@ Demo login: `demo@guardrail.local` / `demopass123`
 | UI (Vercel) | https://guardrail-agent-six.vercel.app |
 | API (Railway) | https://api-production-c5d48.up.railway.app |
 
-Stack on Railway: MongoDB + Go policy + demo vault + Anvil (+ contract deploy on boot) + Express API. `NEXT_PUBLIC_API_URL` on Vercel points at the Railway API. Demo login: `demo@guardrail.local` / `demopass123`.
+Railway runs Mongo, Go policy, the demo vault, Anvil (contracts on boot), and Express. Vercel `NEXT_PUBLIC_API_URL` points at that API. Same demo login as local.
 
-Local Docker Compose remains the primary way to develop; Railway is for the always-on interview demo.
+Develop against Compose. The hosted pair is the always-on interview URL, still on MockPlanner.
 
 ## Planner
 
-`PLANNER=mock` (default, CI, hosted demo) is the keyword router. `PLANNER=openai` plus `OPENAI_API_KEY` hits an OpenAI-compatible chat completions API. `OPENAI_MODEL` is optional (default `gpt-4o-mini`). Missing key fails closed. Live planner is optional; policy and human approve do not change.
+`PLANNER=mock` is the default for CI and the hosted demo: a keyword router, no keys. `PLANNER=openai` plus `OPENAI_API_KEY` calls an OpenAI-compatible chat API. `OPENAI_MODEL` defaults to `gpt-4o-mini`. Missing key throws. Policy and human approve do not change.
 
 ## Evals
 
-Fixture evals send canned `plan` JSON to the Go policy service. CI uses this path. No planner, no `OPENAI_API_KEY`. A fail prints expected vs actual. Three denies are frozen (`infinite_approve`, `recipient_not_allowed`, schema injection): CI fails if those fixtures vanish or start passing. How to add one: [packages/evals/README.md](packages/evals/README.md).
+CI posts canned `plan` JSON at Go policy. No planner, no `OPENAI_API_KEY`. A mismatch prints expected vs actual. Three denies stay frozen (`infinite_approve`, `recipient_not_allowed`, schema injection): delete the file or let the case pass and the job fails. Adding a fixture: [packages/evals/README.md](packages/evals/README.md).
 
 ```bash
 cd packages/evals && npm install
 POLICY_SERVICE_URL=http://127.0.0.1:8090 npm test
 ```
 
-Live planner traces are off unless `EVAL_PLANNER=openai`. The runner calls `createPlanner()`, then `/v1/validate`, and writes `{model, promptHash, plan, policyCodes, latencyMs}` under `packages/evals/traces/` (gitignored). Needs `services/api` deps and a built `plan-schema` because the live client lives in the API.
+Live traces stay off unless `EVAL_PLANNER=openai`. That path calls `createPlanner()`, then `/v1/validate`, and writes `{model, promptHash, plan, policyCodes, latencyMs}` under `packages/evals/traces/` (gitignored). It needs `services/api` deps and a built `plan-schema`.
 
 ```bash
 cd packages/plan-schema && npm install && npm run build
@@ -88,10 +88,8 @@ GitHub Actions does not run the live suite.
 
 ## Limits
 
-Portfolio / interview demo. The honest list lives in [docs/production-gaps.md](docs/production-gaps.md): local Anvil and solana-test-validator only, demo vault is not MPC, Express can still ask the vault to sign, hosted demo stays on MockPlanner, fixture evals are not live quality.
+Portfolio / interview demo. The honest list is [docs/production-gaps.md](docs/production-gaps.md): local Anvil and solana-test-validator only, demo vault is not MPC, Express can still ask the vault to sign, hosted demo stays on MockPlanner, fixture evals are not live quality.
 
 ## CI
 
-GitHub Actions: Go policy tests, API typecheck and tests, vault typecheck, Forge tests, Next typecheck, canned-plan eval fixtures against the policy service.
-
-Plan lifecycle is one JSON line per `AuditEvent` on the API process (`intentId`, `planId`, `policyCodes`, `latencyMs`, `tokens`). No tracing vendor.
+GitHub Actions runs Go policy tests, API typecheck and tests, vault typecheck, Forge tests, Next typecheck, and the fixture evals. The API prints one JSON line per plan `AuditEvent` (`intentId`, `planId`, `policyCodes`, `latencyMs`, `tokens`).

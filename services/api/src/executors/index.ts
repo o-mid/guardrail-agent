@@ -1,10 +1,10 @@
 import { Plan, PlanStep } from "../models/index.js";
-import { setStepRunner, type ExecResult, type StoredPlanForPolicy } from "../services/execution.js";
+import { installStepExecutor, type ExecResult, type StoredPlanForPolicy } from "../services/execution.js";
 import { executeEvmStep } from "./evm.js";
 import { executeSolanaStep } from "./solana.js";
 
 export function registerExecutors(): void {
-  setStepRunner(async (planId, stepIndex) => {
+  installStepExecutor(async (planId, stepIndex) => {
     const plan = await Plan.findById(planId);
     const steps = await PlanStep.find({ planId }).sort({ index: 1 });
     const step = steps.find((s) => s.index === stepIndex);

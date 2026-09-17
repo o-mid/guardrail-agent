@@ -62,7 +62,7 @@ export class OpenAIPlanner implements Planner {
     this.chat = opts.chat ?? postChatCompletions({ apiKey: opts.apiKey, baseUrl: opts.baseUrl });
   }
 
-  lastCall(): PlannerCallMeta {
+  lastPlannerMeta(): PlannerCallMeta {
     return this.callMeta;
   }
 
