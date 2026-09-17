@@ -42,4 +42,6 @@ Mainnet trading, real threshold MPC / multi-party key shares, autonomous loops, 
 
 ## Residual risk
 
-If Express is compromised, policy can still be skipped at the orchestration layer, and the attacker can ask the vault to sign (local Bearer token). The vault split removes "keys sitting in the API env" and makes the production MPC/HSM swap obvious — it is not a substitute for threshold custody. Keep policy checks mandatory on the approve path and keep demo keys off any public network.
+Approve and vault-sign re-run Go `/v1/validate` on the current `PlanStep.payload` rows (not `rawModelJson`) using `loadPolicy(userId)` — the latest user-scoped or global rules, not a frozen copy from plan create. A later policy bump can reject a plan that passed at intent time. Mutating recipient or amount in Mongo should fail the approve claim and fail again immediately before `vaultSignEvmTx` / `vaultSignSolanaTx`, so skipping orchestration is harder than it was when only the intent-time gate existed.
+
+If Express is compromised it can still omit those calls and ask the vault to sign with the same local Bearer token. The vault split keeps keys out of the API process and makes an MPC/HSM swap obvious; it is not threshold custody. Keep demo keys off any public network.
