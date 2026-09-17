@@ -66,7 +66,7 @@ Local Docker Compose remains the primary way to develop; Railway is for the alwa
 
 ## Evals
 
-Fixture evals send canned `plan` JSON to the Go policy service. CI uses this path. No planner, no `OPENAI_API_KEY`.
+Fixture evals send canned `plan` JSON to the Go policy service. CI uses this path. No planner, no `OPENAI_API_KEY`. A fail prints expected vs actual. Three denies are frozen (`infinite_approve`, `recipient_not_allowed`, schema injection): CI fails if those fixtures vanish or start passing. How to add one: [packages/evals/README.md](packages/evals/README.md).
 
 ```bash
 cd packages/evals && npm install

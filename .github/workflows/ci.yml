@@ -88,9 +88,12 @@ jobs:
           sleep 1
       - name: run evals
         working-directory: packages/evals
+        env:
+          POLICY_SERVICE_URL: http://127.0.0.1:8090
         run: |
+          unset OPENAI_API_KEY EVAL_PLANNER PLANNER
           npm install
-          POLICY_SERVICE_URL=http://127.0.0.1:8090 npm test
+          npm test
 
   web:
     runs-on: ubuntu-latest
