@@ -6,18 +6,18 @@ import { defaultRules, validatePlan, type PolicyRules } from "../policy/client.j
 
 let planner: Planner = createPlanner();
 
-export function setPlanner(next: Planner): void {
+export function installPlanner(next: Planner): void {
   planner = next;
 }
 
-type PlannerCost = {
+type PlannerCallSnapshot = {
   plannerLatencyMs: number;
   plannerModel: string | null;
   usage: PlannerUsage | null;
 };
 
-function plannerCost(latencyMs: number): PlannerCost {
-  const meta = planner.lastCall?.() ?? {};
+function snapshotPlannerCall(latencyMs: number): PlannerCallSnapshot {
+  const meta = planner.lastPlannerMeta?.() ?? {};
   return {
     plannerLatencyMs: latencyMs,
     plannerModel: meta.model ?? null,
@@ -50,7 +50,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       chainHint,
     });
   } catch (err) {
-    const cost = plannerCost(Math.round(performance.now() - started));
+    const cost = snapshotPlannerCall(Math.round(performance.now() - started));
     intent.status = "planner_unavailable";
     intent.plannerLatencyMs = cost.plannerLatencyMs;
     intent.plannerModel = cost.plannerModel;
@@ -67,7 +67,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     });
     return { intent, plan: null };
   }
-  const cost = plannerCost(Math.round(performance.now() - started));
+  const cost = snapshotPlannerCall(Math.round(performance.now() - started));
 
   let validation;
   try {
@@ -155,7 +155,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       index,
       action: String(step.action),
       payload: step,
-      decodedSummary: decodeStep(step),
+      decodedSummary: summarizeStep(step),
       status: "pending",
     })),
   );
@@ -188,7 +188,7 @@ export async function loadPolicy(userId: string): Promise<{ version: number; rul
   return { version: 1, rules: defaultRules };
 }
 
-function decodeStep(step: Record<string, unknown>): string {
+function summarizeStep(step: Record<string, unknown>): string {
   const action = String(step.action);
   if (action === "approve") return `approve ${step.amount} ${step.token} for ${step.spender}`;
   if (action === "swap") return `swap ${step.amountIn} ${step.tokenIn} -> ${step.tokenOut}`;

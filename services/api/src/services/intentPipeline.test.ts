@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { AuditEvent, Intent, Plan, PlanStep, Policy } from "../models/index.js";
 import { MockPlanner } from "../planner/mock.js";
 import { OpenAIPlanner, type ChatCompletionResult, type ChatCompletionsFn } from "../planner/openai.js";
-import { createIntentFlow, setPlanner } from "./intentPipeline.js";
+import { createIntentFlow, installPlanner } from "./intentPipeline.js";
 
 const recordedDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "../planner/recorded");
 
@@ -75,7 +75,7 @@ describe("intent pipeline planner cost", { concurrency: false }, () => {
   beforeEach(() => {
     createdPlans = [];
     logs = [];
-    setPlanner(new MockPlanner());
+    installPlanner(new MockPlanner());
     console.log = (msg?: unknown) => {
       logs.push(String(msg));
     };
@@ -106,7 +106,7 @@ describe("intent pipeline planner cost", { concurrency: false }, () => {
     globalThis.fetch = originalFetch;
     console.log = originalLog;
     mock.restoreAll();
-    setPlanner(new MockPlanner());
+    installPlanner(new MockPlanner());
   });
 
   it("stores latency and omits tokens for the mock planner", async () => {
@@ -120,7 +120,7 @@ describe("intent pipeline planner cost", { concurrency: false }, () => {
   });
 
   it("stores recorded token usage on the plan for the live planner", async () => {
-    setPlanner(
+    installPlanner(
       new OpenAIPlanner({
         apiKey: "sk-test",
         model: "gpt-4o-mini",
@@ -136,7 +136,7 @@ describe("intent pipeline planner cost", { concurrency: false }, () => {
   });
 
   it("stores latency and tokens on the intent when live planner schema-misses", async () => {
-    setPlanner(
+    installPlanner(
       new OpenAIPlanner({
         apiKey: "sk-test",
         model: "gpt-4o-mini",

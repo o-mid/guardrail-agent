@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, it, mock } from "node:test";
 import { executeEvmStep } from "../executors/evm.js";
 import { executeSolanaStep } from "../executors/solana.js";
 import { AuditEvent, Plan, PlanStep, Policy } from "../models/index.js";
-import { approveStep, setStepRunner, storedPlanJson, type StoredPlanForPolicy } from "./execution.js";
+import { approveStep, installStepExecutor, storedPlanJson, type StoredPlanForPolicy } from "./execution.js";
 
 const ALICE = "0x1111111111111111111111111111111111111111";
 const EVIL = "0xEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
@@ -128,7 +128,7 @@ describe("approve and sign policy re-check", { concurrency: false }, () => {
       return step;
     });
     mock.method(PlanStep, "countDocuments", async () => 0);
-    setStepRunner(async () => {
+    installStepExecutor(async () => {
       ran += 1;
       return { ok: true, dryRunOk: true, txHash: "0xstub" };
     });
@@ -151,7 +151,7 @@ describe("approve and sign policy re-check", { concurrency: false }, () => {
     globalThis.fetch = originalFetch;
     console.log = originalLog;
     mock.restoreAll();
-    setStepRunner(async () => ({ ok: true, dryRunOk: true, txHash: "0xnone" }));
+    installStepExecutor(async () => ({ ok: true, dryRunOk: true, txHash: "0xnone" }));
   });
 
   it("builds policy JSON from step payload, not rawModelJson", () => {
