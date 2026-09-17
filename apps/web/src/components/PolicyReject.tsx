@@ -1,3 +1,7 @@
+import { WarningIcon } from "@/components/icons";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+
 type PolicyRejectProps = {
   policyCodes?: string[];
   humanMessages?: string[];
@@ -8,11 +12,12 @@ type PolicyRejectProps = {
 const CODE_COPY: Record<string, { title: string; blurb: string }> = {
   infinite_approve: {
     title: "Infinite approve blocked",
-    blurb: "Schema accepted the amount string; Go policy refused max-uint spend. No Approve button — nothing hits the chain.",
+    blurb:
+      "Schema accepted the amount string. Go policy refused max-uint spend. No Approve button. Nothing hits the chain.",
   },
   recipient_not_allowed: {
     title: "Recipient not allowlisted",
-    blurb: "Transfer target is outside the policy allowlist. Loud reject with a stable code — same product surface as infinite approve.",
+    blurb: "Transfer target is outside the policy allowlist. Same reject surface, different rule.",
   },
   amount_over_cap: {
     title: "Amount over policy cap",
@@ -38,27 +43,25 @@ export function PolicyReject({
   const headline = pickHeadline(codes, title);
 
   return (
-    <div
-      role="alert"
+    <Alert
+      variant="destructive"
       aria-live="assertive"
-      className="motion-safe:animate-reject-enter -mx-6 border-y-2 border-danger bg-danger-bg px-6 py-5 md:-mx-8 md:px-8"
+      className="motion-safe:animate-reject-enter rounded-none border-x-0 border-y-2 border-destructive px-5 py-5 md:px-6"
     >
-      <p className="font-display text-lg font-semibold text-danger">{headline.title}</p>
-      {headline.blurb ? <p className="mt-2 max-w-2xl text-sm text-danger/90">{headline.blurb}</p> : null}
+      <WarningIcon className="size-4" />
+      <AlertTitle className="text-base">{headline.title}</AlertTitle>
+      {headline.blurb ? <AlertDescription>{headline.blurb}</AlertDescription> : null}
       {codes.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {codes.map((code) => (
-            <code
-              key={code}
-              className="rounded-sm border border-danger/30 bg-white px-2 py-0.5 font-mono text-xs font-semibold text-danger"
-            >
+            <Badge key={code} variant="destructive">
               {code}
-            </code>
+            </Badge>
           ))}
         </div>
       ) : null}
       {humanMessages.length > 0 ? (
-        <ul className="mt-4 space-y-1.5 text-sm text-danger">
+        <ul className="mt-3 space-y-1.5 text-sm">
           {humanMessages.map((msg) => (
             <li key={msg} className="leading-relaxed">
               {msg}
@@ -66,9 +69,9 @@ export function PolicyReject({
           ))}
         </ul>
       ) : null}
-      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-danger/70">
-        No approve · no dry-run · no broadcast
+      <p className="mt-4 text-xs font-medium text-destructive">
+        No approve, no dry-run, no broadcast
       </p>
-    </div>
+    </Alert>
   );
 }

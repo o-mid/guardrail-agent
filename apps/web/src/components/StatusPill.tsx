@@ -1,3 +1,5 @@
+import { Badge } from "@/components/ui/badge";
+
 type Status =
   | "pending"
   | "approved"
@@ -14,35 +16,49 @@ type Status =
   | "completed"
   | string;
 
-const styles: Record<string, string> = {
-  pending: "bg-canvas-subtle text-ink-muted border-line",
-  approved: "bg-accent/10 text-accent border-accent/30",
-  awaiting_approval: "bg-canvas-subtle text-ink border-line motion-safe:animate-status-pulse",
-  executing: "bg-accent/10 text-accent border-accent/30 motion-safe:animate-status-pulse",
-  dry_running: "bg-accent/10 text-accent border-accent/30 motion-safe:animate-status-pulse",
-  submitting: "bg-accent/15 text-accent border-accent/40 motion-safe:animate-status-pulse",
-  succeeded: "bg-accent/10 text-accent border-accent/30",
-  completed: "bg-accent/10 text-accent border-accent/30",
-  failed: "bg-danger-bg text-danger border-danger/40",
-  cancelled: "bg-canvas-subtle text-ink-muted border-line",
-  rejected: "bg-danger-bg text-danger border-danger/40",
-  rejected_policy: "bg-danger-bg text-danger border-danger/40",
-  rejected_schema: "bg-danger-bg text-danger border-danger/40",
-};
+function variantFor(status: string): "default" | "primary" | "warning" | "success" | "destructive" | "secondary" {
+  if (
+    status === "rejected" ||
+    status === "rejected_policy" ||
+    status === "rejected_schema" ||
+    status === "failed"
+  ) {
+    return "destructive";
+  }
+  if (status === "awaiting_approval" || status === "pending") return "warning";
+  if (
+    status === "approved" ||
+    status === "succeeded" ||
+    status === "completed" ||
+    status === "executing" ||
+    status === "dry_running" ||
+    status === "submitting"
+  ) {
+    return status === "succeeded" || status === "completed" || status === "approved"
+      ? "success"
+      : "primary";
+  }
+  return "secondary";
+}
 
 function label(status: Status): string {
   return status.replace(/_/g, " ");
 }
 
 export function StatusPill({ status }: { status: Status }) {
-  const style = styles[status] ?? styles.pending;
   const text = label(status);
+  const live =
+    status === "awaiting_approval" ||
+    status === "executing" ||
+    status === "dry_running" ||
+    status === "submitting";
   return (
-    <span
+    <Badge
+      variant={variantFor(status)}
       aria-label={`Status: ${text}`}
-      className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium uppercase tracking-wide transition-colors duration-300 ${style}`}
+      className={live ? "motion-safe:animate-status-pulse" : undefined}
     >
       {text}
-    </span>
+    </Badge>
   );
 }

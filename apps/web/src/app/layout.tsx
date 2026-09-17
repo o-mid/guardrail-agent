@@ -1,29 +1,18 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
 import { Providers } from "@/components/Providers";
+import { cn } from "@/lib/utils";
 import "./globals.css";
-
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const body = Source_Sans_3({
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Guardrail Agent",
-  description: "Checked plans for AI-assisted wallet actions",
+  description: "Control plane for untrusted chain intents: PlanV1, Go policy, human approve, local vault.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body className="min-h-screen bg-canvas font-body antialiased">
+    <html lang="en" className={cn("dark", GeistMono.variable)}>
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

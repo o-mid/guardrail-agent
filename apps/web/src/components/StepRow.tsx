@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { StatusPill } from "./StatusPill";
 import { StepPipeline } from "./StepPipeline";
 
@@ -75,64 +76,64 @@ export function StepRow({
   const fields = payloadEntries(payload);
 
   return (
-    <li
-      className={[
-        "border border-line bg-surface px-4 py-3 transition-colors duration-300",
-        "motion-safe:animate-step-enter",
-        flash ? "motion-safe:animate-status-flash border-accent/50" : "",
-      ].join(" ")}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-xs text-ink-muted">#{index}</span>
-            <span className="text-sm font-medium">{action}</span>
-            <StatusPill status={status} />
-          </div>
-          <p className="mt-1 text-sm text-ink-muted">{decodedSummary}</p>
-          <StepPipeline status={status} />
-        </div>
-        {canApprove && onApprove ? (
-          <Button
-            variant="primary"
-            onClick={onApprove}
-            disabled={busy}
-            aria-label={`Approve step ${index}: ${action}`}
-            className="shrink-0"
-          >
-            {busy ? "Working…" : "Approve"}
-          </Button>
-        ) : null}
-      </div>
-
-      {fields.length > 0 ? (
-        <dl className="mt-3 grid gap-x-4 gap-y-1 border-t border-line pt-3 sm:grid-cols-2">
-          {fields.map(([key, value]) => (
-            <div key={key} className="flex min-w-0 gap-2 text-xs">
-              <dt className="shrink-0 font-medium uppercase tracking-wide text-ink-muted">{key}</dt>
-              <dd className="min-w-0 truncate font-mono text-ink" title={value}>
-                {value}
-              </dd>
+    <li>
+      <Card
+        className={[
+          "p-4 motion-safe:animate-step-enter",
+          flash ? "motion-safe:animate-status-flash" : "",
+        ].join(" ")}
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">#{index}</span>
+              <span className="text-sm font-medium">{action}</span>
+              <StatusPill status={status} />
             </div>
-          ))}
-        </dl>
-      ) : null}
+            <p className="mt-1 text-sm text-muted-foreground">{decodedSummary}</p>
+            <StepPipeline status={status} />
+          </div>
+          {canApprove && onApprove ? (
+            <Button
+              onClick={onApprove}
+              disabled={busy}
+              aria-label={`Approve step ${index}: ${action}`}
+              className="shrink-0"
+            >
+              {busy ? "Working…" : "Approve"}
+            </Button>
+          ) : null}
+        </div>
 
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
-        {dryRunOk === true ? <span className="text-accent">dry-run ok</span> : null}
-        {dryRunOk === false ? <span className="text-danger">dry-run failed</span> : null}
-        {txHash ? (
-          <span className="font-mono">
-            tx <span className="text-ink">{txHash}</span>
-          </span>
+        {fields.length > 0 ? (
+          <dl className="mt-3 grid gap-x-4 gap-y-1 border-t border-border pt-3 sm:grid-cols-2">
+            {fields.map(([key, value]) => (
+              <div key={key} className="flex min-w-0 gap-2 text-xs">
+                <dt className="shrink-0 font-medium text-muted-foreground">{key}</dt>
+                <dd className="min-w-0 truncate font-mono text-foreground" title={value}>
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         ) : null}
-      </div>
 
-      {error ? (
-        <p role="alert" className="mt-2 text-xs text-danger">
-          {error}
-        </p>
-      ) : null}
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {dryRunOk === true ? <span className="text-[oklch(0.82_0.15_145)]">dry-run ok</span> : null}
+          {dryRunOk === false ? <span className="text-destructive">dry-run failed</span> : null}
+          {txHash ? (
+            <span className="font-mono">
+              tx <span className="text-foreground">{txHash}</span>
+            </span>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p role="alert" className="mt-2 text-xs text-destructive">
+            {error}
+          </p>
+        ) : null}
+      </Card>
     </li>
   );
 }
