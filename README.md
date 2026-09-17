@@ -60,16 +60,20 @@ Stack on Railway: MongoDB + Go policy + demo vault + Anvil (+ contract deploy on
 
 Local Docker Compose remains the primary way to develop; Railway is for the always-on interview demo.
 
+## Planner
+
+`PLANNER=mock` (default, CI, hosted demo) is the keyword router. `PLANNER=openai` plus `OPENAI_API_KEY` hits an OpenAI-compatible chat completions API. `OPENAI_MODEL` is optional (default `gpt-4o-mini`). Missing key fails closed. Live planner is optional; policy and human approve do not change.
+
 ## Limits
 
 This is a portfolio / interview demo, not production infrastructure.
 
 - Local Anvil and solana-test-validator only by default
 - Demo key vault holds keys; not real threshold MPC / HSM, no mainnet defaults
-- MockPlanner is the zero-key default; LLM planner is env-gated and still policy-checked
+- MockPlanner is the zero-key default. Live planner is env-gated (`PLANNER=openai`) and still policy-checked; hosted demo stays mock
 - Express + Mongo here on purpose for full-stack JD coverage; Go owns policy; vault owns signing
 - If the API is compromised, policy could be skipped and the vault can still be asked to sign (see threat model)
 
 ## CI
 
-GitHub Actions: Go policy tests, API + vault typecheck, Forge tests, Next typecheck, eval fixtures against the policy service.
+GitHub Actions: Go policy tests, API typecheck and tests, vault typecheck, Forge tests, Next typecheck, eval fixtures against the policy service.
