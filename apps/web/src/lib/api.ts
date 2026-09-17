@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const DEAD_HOSTED_API = "https://api-production-3231.up.railway.app";
+const LIVE_HOSTED_API = "https://api-production-c5d48.up.railway.app";
+const configured = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_URL = configured === DEAD_HOSTED_API ? LIVE_HOSTED_API : configured;
 
 export type Tokens = { accessToken: string; refreshToken: string };
 
