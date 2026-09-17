@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
-import { Button } from "@/components/Button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { saveTokens } from "@/lib/session";
-
-const inputClass =
-  "mt-1.5 w-full border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -25,10 +26,10 @@ export default function RegisterPage() {
     try {
       const data = await api<{ accessToken: string; refreshToken: string }>("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
       saveTokens(data.accessToken, data.refreshToken);
-      router.push("/app");
+      router.push("/app/compose");
     } catch (err) {
       setError(err instanceof Error ? err.message : "register_failed");
     } finally {
@@ -37,53 +38,59 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col justify-center px-6 pb-28">
+    <main className="flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6">
       <div className="mx-auto w-full max-w-md motion-safe:animate-mark-fade-in">
         <Link href="/" className="inline-flex items-center gap-2.5">
           <BrandMark size="sm" />
-          <span className="font-display text-lg font-semibold text-ink hover:text-accent">
-            Guardrail Agent
-          </span>
+          <span className="text-sm font-semibold">Guardrail Agent</span>
         </Link>
-        <h1 className="mt-8 font-display text-3xl font-semibold tracking-tight text-ink">Register</h1>
+        <h1 className="mt-8 text-3xl font-semibold tracking-tight">Register</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Local accounts only. Not a production identity.</p>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4 atmosphere-panel p-5">
-          <label className="block text-sm font-medium text-ink">
-            Email
-            <input
-              className={inputClass}
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </label>
-          <label className="block text-sm font-medium text-ink">
-            Password (min 8 characters)
-            <input
-              className={inputClass}
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </label>
-          {error ? (
-            <p role="alert" className="rounded-sm border border-danger/30 bg-danger-bg px-3 py-2 text-sm text-danger">
-              {error}
-            </p>
-          ) : null}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Creating…" : "Create account"}
-          </Button>
-        </form>
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Create account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password (min 8 characters)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? "Creating…" : "Create account"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-        <p className="mt-4 text-sm text-ink-muted">
+        <p className="mt-4 text-sm text-muted-foreground">
           Already registered?{" "}
-          <Link href="/login" className="font-medium text-accent hover:underline">
+          <Link href="/login" className="font-medium text-primary hover:underline">
             Log in
           </Link>
         </p>
