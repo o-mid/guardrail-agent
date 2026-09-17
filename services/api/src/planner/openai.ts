@@ -48,6 +48,9 @@ export class OpenAIPlanner implements Planner {
   private readonly chat: ChatCompletionsFn;
 
   constructor(opts: { apiKey: string; model: string; chat?: ChatCompletionsFn; baseUrl?: string }) {
+    if (!opts.chat && !opts.apiKey) {
+      throw new Error("PLANNER=openai requires OPENAI_API_KEY");
+    }
     this.model = opts.model;
     this.chat = opts.chat ?? postChatCompletions({ apiKey: opts.apiKey, baseUrl: opts.baseUrl });
   }
