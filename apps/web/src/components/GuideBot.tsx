@@ -33,7 +33,7 @@ const STEPS: GuideStep[] = [
   {
     id: "compose",
     title: "Compose",
-    body: "Describe a wallet action. Click an underlined example sentence to fill the intent field.",
+    body: "Describe a wallet action. Use a sample chip to fill the intent field.",
     href: "/app/compose",
     hrefLabel: "Compose",
   },
@@ -68,7 +68,7 @@ const STEPS: GuideStep[] = [
   {
     id: "audit",
     title: "Audit",
-    body: "Open Audit for the decision log. Filter rejects, open a plan feed, confirm every gate left a trail.",
+    body: "Open Audit for the decision log. Filter rejects, open evidence, confirm every gate left a trail.",
     href: "/app/audit",
     hrefLabel: "Audit",
   },
@@ -91,7 +91,7 @@ function loadState(): Persisted {
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { open: true, step: 0, dismissed: false };
+    if (!raw) return { open: false, step: 0, dismissed: false };
     const parsed = JSON.parse(raw) as Partial<Persisted>;
     return {
       open: Boolean(parsed.open),
@@ -138,6 +138,7 @@ export function GuideBot() {
   }, [ready, open, step, dismissed]);
 
   if (!ready) return null;
+  if (pathname === "/" || pathname === "/register") return null;
 
   if (dismissed) {
     return (
@@ -148,7 +149,7 @@ export function GuideBot() {
             setDismissed(false);
             setOpen(true);
           }}
-          className="group flex items-center gap-2 border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink shadow-[var(--guide-shadow)] transition-colors hover:border-accent"
+          className="group flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground [box-shadow:var(--shadow-md)] hover:border-primary"
           aria-label="Open guide"
         >
           <BrandMark size="sm" />
@@ -183,27 +184,27 @@ export function GuideBot() {
           id="guide-panel"
           role="dialog"
           aria-label="Product guide"
-          className="motion-safe:animate-mark-fade-in w-[min(100vw-1.5rem,23.5rem)] overflow-hidden border border-line bg-surface shadow-[var(--guide-shadow)]"
+          className="motion-safe:animate-mark-fade-in w-[min(100vw-1.5rem,23.5rem)] overflow-hidden rounded-lg border border-border bg-card [box-shadow:var(--shadow-lg)]"
         >
-          <div className="h-0.5 bg-accent" aria-hidden />
+          <div className="h-0.5 bg-primary" aria-hidden />
 
           <header className="flex items-start justify-between gap-3 px-4 pb-3 pt-3.5">
             <div className="flex items-start gap-2.5">
               <BrandMark size="sm" className="mt-0.5" />
               <div>
-                <p className="font-display text-sm font-semibold tracking-tight text-ink">
+                <p className="text-sm font-semibold tracking-tight text-foreground">
                   Operator guide
                 </p>
-                <p className="mt-0.5 text-[11px] text-ink-muted">
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
                   Step {step + 1} of {STEPS.length}
-                  {here ? " · this screen" : ""}
+                  {here ? ", this screen" : ""}
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-xs text-ink-muted transition-colors hover:text-ink"
+              className="text-xs text-muted-foreground hover:text-foreground"
               aria-label="Minimize guide"
             >
               Minimize
@@ -212,14 +213,14 @@ export function GuideBot() {
 
           <div className="px-4">
             <div
-              className="h-1 overflow-hidden bg-canvas-subtle"
+              className="h-1 overflow-hidden bg-muted"
               role="progressbar"
               aria-valuenow={step + 1}
               aria-valuemin={1}
               aria-valuemax={STEPS.length}
             >
               <div
-                className="h-full bg-accent transition-[width] duration-300 ease-out"
+                className="h-full bg-primary transition-[width] duration-300 ease-out"
                 style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
               />
             </div>
@@ -228,16 +229,16 @@ export function GuideBot() {
           <div className="max-h-[min(52vh,20rem)] space-y-3 overflow-y-auto px-4 py-4">
             <div
               key={current.id}
-              className="border border-line bg-canvas-subtle px-3.5 py-3 motion-safe:animate-step-enter"
+              className="rounded-md border border-border bg-muted/40 px-3.5 py-3 motion-safe:animate-step-enter"
             >
-              <p className="text-[11px] font-medium uppercase tracking-wide text-accent">
+              <p className="text-[11px] font-medium text-primary">
                 {current.title}
               </p>
-              <p className="mt-1.5 text-sm leading-relaxed text-ink">{current.body}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-foreground">{current.body}</p>
               {current.href ? (
                 <Link
                   href={current.href}
-                  className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                 >
                   {current.hrefLabel ?? "Open"}
                   <span aria-hidden>→</span>
@@ -253,11 +254,11 @@ export function GuideBot() {
                     onClick={() => setStep(i)}
                     title={s.title}
                     className={`flex h-7 w-full items-center justify-center border text-[10px] font-medium transition-colors ${
-                      i === step
-                        ? "border-accent bg-accent text-white"
+                        i === step
+                        ? "border-primary bg-primary text-primary-foreground"
                         : i < step
-                          ? "border-accent/30 bg-accent/10 text-accent"
-                          : "border-line bg-surface text-ink-muted hover:border-accent/50"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/50"
                     }`}
                     aria-label={`Step ${i + 1}: ${s.title}`}
                     aria-current={i === step ? "step" : undefined}
@@ -269,11 +270,11 @@ export function GuideBot() {
             </ol>
           </div>
 
-          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-canvas-subtle/60 px-4 py-3">
+          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-muted/40 px-4 py-3">
             <button
               type="button"
               onClick={skipAll}
-              className="text-xs text-ink-muted transition-colors hover:text-ink"
+              className="text-xs text-muted-foreground hover:text-foreground"
             >
               Skip tour
             </button>
@@ -282,7 +283,7 @@ export function GuideBot() {
                 <button
                   type="button"
                   onClick={() => setStep((s) => Math.max(0, s - 1))}
-                  className="border border-line bg-surface px-2.5 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
                 >
                   Back
                 </button>
@@ -291,7 +292,7 @@ export function GuideBot() {
                 <button
                   type="button"
                   onClick={next}
-                  className="border border-line bg-surface px-2.5 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
                 >
                   Skip
                 </button>
@@ -299,7 +300,7 @@ export function GuideBot() {
               <button
                 type="button"
                 onClick={next}
-                className="border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-hover"
+                className="rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
               >
                 {isLast ? "Finish" : "Next"}
               </button>
@@ -311,7 +312,7 @@ export function GuideBot() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink shadow-[var(--guide-shadow)] transition-colors hover:border-accent"
+        className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground [box-shadow:var(--shadow-md)] hover:border-primary"
         aria-expanded={open}
         aria-controls="guide-panel"
         aria-label={open ? "Close guide" : "Open guide"}
@@ -319,7 +320,7 @@ export function GuideBot() {
         <BrandMark size="sm" />
         <span>{open ? "Hide guide" : "Guide"}</span>
         {!open ? (
-          <span className="border border-line bg-canvas-subtle px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
+          <span className="rounded-sm border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
             {step + 1}/{STEPS.length}
           </span>
         ) : null}

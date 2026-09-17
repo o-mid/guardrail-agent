@@ -1,19 +1,17 @@
+"use client";
+
 import Link from "next/link";
-import { ButtonHTMLAttributes, AnchorHTMLAttributes } from "react";
+import { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
+import { Button as UiButton, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "secondary" | "danger";
 
-const variants: Record<Variant, string> = {
-  primary:
-    "bg-accent text-white hover:bg-accent-hover border border-accent focus-visible:shadow-focus disabled:opacity-50 disabled:cursor-not-allowed",
-  secondary:
-    "bg-surface text-ink border border-line hover:bg-canvas-subtle focus-visible:shadow-focus disabled:opacity-50 disabled:cursor-not-allowed",
-  danger:
-    "bg-danger text-white border border-danger hover:opacity-90 focus-visible:shadow-focus focus-visible:outline-danger disabled:opacity-50 disabled:cursor-not-allowed",
-};
-
-const base =
-  "inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors";
+const mapped = {
+  primary: "default",
+  secondary: "secondary",
+  danger: "destructive",
+} as const;
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
@@ -27,9 +25,9 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button type={type} className={`${base} ${variants[variant]} ${className}`} {...props}>
+    <UiButton type={type} variant={mapped[variant]} className={className} {...props}>
       {children}
-    </button>
+    </UiButton>
   );
 }
 
@@ -38,9 +36,19 @@ type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   variant?: Variant;
 };
 
-export function ButtonLink({ variant = "primary", className = "", href, children, ...props }: ButtonLinkProps) {
+export function ButtonLink({
+  variant = "primary",
+  className = "",
+  href,
+  children,
+  ...props
+}: ButtonLinkProps) {
   return (
-    <Link href={href} className={`${base} ${variants[variant]} ${className}`} {...props}>
+    <Link
+      href={href}
+      className={cn(buttonVariants({ variant: mapped[variant] }), className)}
+      {...props}
+    >
       {children}
     </Link>
   );

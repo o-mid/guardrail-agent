@@ -3,21 +3,119 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ActivityIcon, AppMenuIcon, LogoutIcon, TerminalIcon } from "@/components/icons";
+import { BrandMark } from "@/components/BrandMark";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarItem,
+} from "@/components/ui/sidebar";
+import { StatusIndicator } from "@/components/ui/status-indicator";
 import { api } from "@/lib/api";
 import { clearTokens, getAccessToken } from "@/lib/session";
-import { BrandMark } from "./BrandMark";
 
 type User = { id: string; email: string };
 
 const nav = [
-  { href: "/app/compose", label: "Compose" },
-  { href: "/app/audit", label: "Audit" },
+  { href: "/app/compose", label: "Compose", icon: TerminalIcon },
+  { href: "/app/audit", label: "Audit", icon: ActivityIcon },
 ];
+
+function NavItems({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const router = useRouter();
+  return (
+    <SidebarGroup>
+      {nav.map((item) => {
+        const active = pathname.startsWith(item.href);
+        const Icon = item.icon;
+        return (
+          <SidebarItem
+            key={item.href}
+            active={active}
+            icon={<Icon className="size-4" />}
+            aria-current={active ? "page" : undefined}
+            onClick={() => {
+              router.push(item.href);
+              onNavigate?.();
+            }}
+          >
+            {item.label}
+          </SidebarItem>
+        );
+      })}
+    </SidebarGroup>
+  );
+}
+
+function ShellChrome({
+  user,
+  pathname,
+  onLogout,
+  onNavigate,
+}: {
+  user: User | null;
+  pathname: string;
+  onLogout: () => void;
+  onNavigate?: () => void;
+}) {
+  return (
+    <>
+      <SidebarHeader>
+        <Link href="/app/compose" className="flex min-w-0 items-center gap-2.5" onClick={onNavigate}>
+          <BrandMark size="sm" />
+          <span className="truncate text-sm font-semibold tracking-tight">Guardrail</span>
+        </Link>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavItems pathname={pathname} onNavigate={onNavigate} />
+      </SidebarContent>
+      <SidebarFooter className="space-y-3">
+        <StatusIndicator status="away" label="Local Anvil + Solana" />
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          PLANNER=mock by default. OpenAI fails closed. No mainnet.
+        </p>
+        <Separator />
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-xs text-muted-foreground">
+            {user ? user.email : "Loading…"}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onLogout}
+            aria-label="Log out"
+          >
+            <LogoutIcon className="size-4" />
+          </Button>
+        </div>
+      </SidebarFooter>
+    </>
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -39,65 +137,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen">
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-6">
-          <div className="flex items-center gap-7">
-            <Link
-              href="/app"
-              className="group flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight text-ink"
-            >
-              <BrandMark size="sm" />
-              <span className="transition-colors group-hover:text-accent">Guardrail Agent</span>
-            </Link>
-            <nav className="hidden items-center gap-0.5 sm:flex" aria-label="Main">
-              {nav.map((item) => {
-                const active = pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`relative px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active ? "text-ink" : "text-ink-muted hover:text-ink"
-                    }`}
-                  >
-                    {item.label}
-                    {active ? (
-                      <span
-                        aria-hidden
-                        className="absolute inset-x-3 -bottom-[13px] h-0.5 bg-accent"
-                      />
-                    ) : null}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            {user ? (
-              <span className="hidden max-w-[12rem] truncate text-sm text-ink-muted sm:inline">
-                {user.email}
-              </span>
-            ) : (
-              <span className="hidden text-sm text-ink-muted sm:inline">Loading…</span>
-            )}
-            <button
+      <Sidebar className="sticky top-0 hidden h-svh md:flex" aria-label="Main">
+        <ShellChrome user={user} pathname={pathname} onLogout={logout} />
+      </Sidebar>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-sm md:hidden">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <Button
               type="button"
-              onClick={logout}
-              className="text-sm text-ink-muted transition-colors hover:text-ink"
-              aria-label="Log out"
+              variant="ghost"
+              size="icon"
+              aria-label="Open navigation"
+              onClick={() => setMobileOpen(true)}
             >
-              Log out
-            </button>
-          </div>
-        </div>
-      </header>
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 py-10 pb-28">
-        {children}
-      </main>
+              <AppMenuIcon className="size-4" />
+            </Button>
+            <SheetContent side="left" className="w-64 p-0">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigation</SheetTitle>
+              </SheetHeader>
+              <Sidebar className="h-full w-full border-0 shadow-none">
+                <ShellChrome
+                  user={user}
+                  pathname={pathname}
+                  onLogout={logout}
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              </Sidebar>
+            </SheetContent>
+          </Sheet>
+          <Link href="/app/compose" className="flex items-center gap-2 font-semibold">
+            <BrandMark size="sm" />
+            Guardrail
+          </Link>
+        </header>
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 pb-24 sm:px-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
