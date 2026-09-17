@@ -43,6 +43,7 @@ export const config = {
   solanaRpcUrl: process.env.SOLANA_RPC_URL ?? "http://127.0.0.1:8899",
   planner: (process.env.PLANNER ?? "mock") as "mock" | "openai",
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  openaiModel: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
   corsOrigins,
   siweDomain,
   siweUri,
