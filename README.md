@@ -12,6 +12,7 @@ Model output never becomes raw calldata or instruction bytes. Reject paths are p
 - [Process](docs/process.md) - happy path, rejects, state machines, audit events
 - [Demo](docs/demo.md) - local setup, interviewer script, screenshots
 - [Threat model](docs/threat-model.md) - assets, controls, residual risk
+- [Production gaps](docs/production-gaps.md) - local chains, demo vault, hosted mock planner, fixture evals
 - [Changelog](docs/CHANGELOG.md)
 
 ## Stack
@@ -87,13 +88,7 @@ GitHub Actions does not run the live suite.
 
 ## Limits
 
-This is a portfolio / interview demo, not production infrastructure.
-
-- Local Anvil and solana-test-validator only by default
-- Demo key vault holds keys; not real threshold MPC / HSM, no mainnet defaults
-- MockPlanner is the zero-key default. Live planner is env-gated (`PLANNER=openai`) and still policy-checked; hosted demo stays mock
-- Express + Mongo here on purpose for full-stack JD coverage; Go owns policy; vault owns signing
-- If the API is compromised, policy could be skipped and the vault can still be asked to sign (see threat model)
+Portfolio / interview demo. The honest list lives in [docs/production-gaps.md](docs/production-gaps.md): local Anvil and solana-test-validator only, demo vault is not MPC, Express can still ask the vault to sign, hosted demo stays on MockPlanner, fixture evals are not live quality.
 
 ## CI
 
