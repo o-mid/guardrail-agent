@@ -23,7 +23,7 @@ Model output never becomes raw calldata or instruction bytes. Reject paths are p
 | `services/policy` | Go JSON Schema + policy rules |
 | `services/vault` | Demo key vault (signs after HITL; not threshold MPC) |
 | `packages/plan-schema` | Shared plan schema |
-| `packages/evals` | Accept/reject fixtures against policy |
+| `packages/evals` | Canned-plan fixtures against policy; optional live traces |
 | `contracts` | Foundry mocks for Anvil |
 
 ## Quick start
@@ -64,6 +64,27 @@ Local Docker Compose remains the primary way to develop; Railway is for the alwa
 
 `PLANNER=mock` (default, CI, hosted demo) is the keyword router. `PLANNER=openai` plus `OPENAI_API_KEY` hits an OpenAI-compatible chat completions API. `OPENAI_MODEL` is optional (default `gpt-4o-mini`). Missing key fails closed. Live planner is optional; policy and human approve do not change.
 
+## Evals
+
+Fixture evals send canned `plan` JSON to the Go policy service. CI uses this path. No planner, no `OPENAI_API_KEY`.
+
+```bash
+cd packages/evals && npm install
+POLICY_SERVICE_URL=http://127.0.0.1:8090 npm test
+```
+
+Live planner traces are off unless `EVAL_PLANNER=openai`. The runner calls `createPlanner()`, then `/v1/validate`, and writes `{model, promptHash, plan, policyCodes, latencyMs}` under `packages/evals/traces/` (gitignored). Needs `services/api` deps and a built `plan-schema` because the live client lives in the API.
+
+```bash
+cd packages/plan-schema && npm install && npm run build
+cd ../../services/api && npm ci
+cd ../../packages/evals
+EVAL_PLANNER=openai OPENAI_API_KEY=$OPENAI_API_KEY \
+  POLICY_SERVICE_URL=http://127.0.0.1:8090 npm run test:live
+```
+
+GitHub Actions does not run the live suite.
+
 ## Limits
 
 This is a portfolio / interview demo, not production infrastructure.
@@ -76,4 +97,4 @@ This is a portfolio / interview demo, not production infrastructure.
 
 ## CI
 
-GitHub Actions: Go policy tests, API typecheck and tests, vault typecheck, Forge tests, Next typecheck, eval fixtures against the policy service.
+GitHub Actions: Go policy tests, API typecheck and tests, vault typecheck, Forge tests, Next typecheck, canned-plan eval fixtures against the policy service.
