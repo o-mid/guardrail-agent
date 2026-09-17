@@ -1,3 +1,5 @@
+import { Badge } from "@/components/ui/badge";
+
 const STAGES = [
   { id: "pending", label: "Pending" },
   { id: "approved", label: "Approved" },
@@ -33,41 +35,24 @@ export function StepPipeline({ status }: { status: string }) {
             {i > 0 ? (
               <span
                 aria-hidden
-                className={`h-px w-4 transition-colors duration-300 ${
-                  done || active ? "bg-accent" : "bg-line"
-                }`}
+                className={`h-px w-4 ${done || active ? "bg-primary" : "bg-border"}`}
               />
             ) : null}
-            <span
-              className={[
-                "inline-flex items-center gap-1.5 border px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide transition-all duration-300",
-                done
-                  ? "border-accent/40 bg-accent/10 text-accent"
-                  : active
-                    ? "border-accent bg-accent text-white motion-safe:animate-stage-active"
-                    : "border-line bg-canvas-subtle text-ink-muted",
-              ].join(" ")}
+            <Badge
+              variant={done ? "success" : active ? "primary" : "outline"}
+              className={active ? "motion-safe:animate-stage-active" : undefined}
             >
-              <span
-                aria-hidden
-                className={[
-                  "inline-block h-1.5 w-1.5 rounded-full transition-transform duration-300",
-                  done ? "scale-100 bg-accent" : "",
-                  active ? "scale-125 bg-white" : "",
-                  !done && !active ? "bg-ink-muted/40" : "",
-                ].join(" ")}
-              />
               {stage.label}
-            </span>
+            </Badge>
           </li>
         );
       })}
       {failed ? (
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="h-px w-4 bg-danger/50" />
-          <span className="inline-flex items-center border border-danger/40 bg-danger-bg px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-danger motion-safe:animate-reject-enter">
+          <span aria-hidden className="h-px w-4 bg-destructive/50" />
+          <Badge variant="destructive" className="motion-safe:animate-reject-enter">
             {status.replace(/_/g, " ")}
-          </span>
+          </Badge>
         </li>
       ) : null}
     </ol>
