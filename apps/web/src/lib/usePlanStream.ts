@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { API_URL, api } from "./api";
+import { API_URL, api, type AuditEvent, type PlanIntent } from "./api";
 import { getAccessToken } from "./session";
 
-type PlanBundle<P, S> = { plan: P; steps: S[] };
+type PlanBundle<P, S> = {
+  plan: P;
+  steps: S[];
+  intent?: PlanIntent | null;
+  auditEvents?: AuditEvent[];
+};
 
 /**
  * Subscribe to plan SSE and refresh plan/steps on each event.

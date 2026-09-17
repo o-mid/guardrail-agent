@@ -2,6 +2,20 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type Tokens = { accessToken: string; refreshToken: string };
 
+export type AuditEvent = {
+  _id: string;
+  type: string;
+  entityId: string;
+  createdAt: string;
+  payload?: Record<string, unknown>;
+};
+
+export type PlanIntent = {
+  _id: string;
+  text?: string;
+  status: string;
+};
+
 function authHeader(token?: string | null): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
