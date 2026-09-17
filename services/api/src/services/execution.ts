@@ -5,6 +5,14 @@ import { loadPolicy } from "./intentPipeline.js";
 
 export type ExecResult = { ok: boolean; txHash?: string; error?: string; dryRunOk?: boolean };
 
+export type StoredPlanForPolicy = {
+  userId: string;
+  schemaVersion: string;
+  chain: string;
+  summary: string;
+  steps: Array<{ index: number; payload: unknown }>;
+};
+
 // filled in by chain executors in later commits
 let runner: ((planId: string, stepIndex: number) => Promise<ExecResult>) | null = null;
 
@@ -31,6 +39,18 @@ export async function recheckPlanPolicy(
 ) {
   const policy = await loadPolicy(userId);
   return validatePlan(storedPlanJson(plan, steps), { version: policy.version, rules: policy.rules });
+}
+
+export async function vaultPolicyGate(stored: StoredPlanForPolicy): Promise<ExecResult | null> {
+  let validation;
+  try {
+    validation = await recheckPlanPolicy(stored.userId, stored, stored.steps);
+  } catch {
+    return { ok: false, error: "policy_unreachable" };
+  }
+  if (validation.ok) return null;
+  const code = validation.policyCodes[0] ?? validation.schemaErrors[0] ?? "denied";
+  return { ok: false, error: `policy_rejected:${code}` };
 }
 
 export async function approveStep(userId: string, planId: string, index: number) {
