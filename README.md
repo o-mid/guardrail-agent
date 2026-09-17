@@ -1,8 +1,8 @@
 # Guardrail Agent
 
-Type an intent. The planner returns JSON. Go policy accepts or rejects it. A human approves each step, then the API dry-runs and broadcasts on local Anvil or solana-test-validator.
+Type an intent. The planner answers with JSON, never calldata, never instruction bytes. Go policy runs schema plus allowlists on that JSON. A human still has to approve each step before the API dry-runs and broadcasts, and the only RPCs this repo talks to are local Anvil and solana-test-validator.
 
-The model never emits calldata or instruction bytes. A max-uint approve and a wrong recipient stop at policy, with a loud UI.
+Policy stops a max-uint ERC-20 approve (`infinite_approve`) and a transfer to someone who isn't allowlisted (`recipient_not_allowed`). The UI puts those codes on a banner; there is no Approve button on a rejected plan.
 
 **Latest release:** [v0.1.0](https://github.com/o-mid/guardrail-agent/releases/tag/v0.1.0) · [Changelog](docs/CHANGELOG.md)
 
@@ -59,11 +59,11 @@ Demo login: `demo@guardrail.local` / `demopass123`
 
 Railway runs Mongo, Go policy, the demo vault, Anvil (contracts on boot), and Express. Vercel `NEXT_PUBLIC_API_URL` points at that API. Same demo login as local.
 
-Develop against Compose. The hosted pair is the always-on interview URL, still on MockPlanner.
+Develop against Compose. The hosted pair is the always-on interview URL. It still runs `PLANNER=mock`.
 
 ## Planner
 
-`PLANNER=mock` is the default for CI and the hosted demo: a keyword router, no keys. `PLANNER=openai` plus `OPENAI_API_KEY` calls an OpenAI-compatible chat API. `OPENAI_MODEL` defaults to `gpt-4o-mini`. Missing key throws. Policy and human approve do not change.
+`PLANNER=mock` is the default for CI and the hosted demo: a keyword router, no keys. `PLANNER=openai` plus `OPENAI_API_KEY` calls an OpenAI-compatible chat API. `OPENAI_MODEL` defaults to `gpt-4o-mini`. Missing key throws (fail-closed, no silent fallback to mock). Policy and human approve do not change.
 
 ## Evals
 
@@ -88,7 +88,7 @@ GitHub Actions does not run the live suite.
 
 ## Limits
 
-Portfolio / interview demo. The honest list is [docs/production-gaps.md](docs/production-gaps.md): local Anvil and solana-test-validator only, demo vault is not MPC, Express can still ask the vault to sign, hosted demo stays on MockPlanner, fixture evals are not live quality.
+Portfolio / interview demo. [docs/production-gaps.md](docs/production-gaps.md) is the list: local Anvil and solana-test-validator only, demo vault is a Bearer-token signer (not MPC), Express can still ask the vault to sign, hosted demo stays on MockPlanner, fixture evals are canned plans not live quality.
 
 ## CI
 
