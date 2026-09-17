@@ -1,5 +1,18 @@
 {
   "id": "happy-evm-swap",
   "intent": "Swap 10 MOCK_USDC for MOCK_ETH",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "anvil",
+    "summary": "Swap 10 MOCK_USDC for MOCK_ETH",
+    "steps": [{
+      "action": "swap",
+      "tokenIn": "MOCK_USDC",
+      "tokenOut": "MOCK_ETH",
+      "amountIn": "10",
+      "minAmountOut": "0.001",
+      "maxSlippageBps": 50
+    }]
+  },
   "expect": { "ok": true, "chain": "anvil", "action": "swap" }
 }

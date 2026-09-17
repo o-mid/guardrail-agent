@@ -78,8 +78,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: services/api/package-lock.json
       - name: start policy
         working-directory: services/policy
         run: |
@@ -88,9 +86,6 @@ jobs:
           POLICY_DEFAULTS_PATH=$PWD/config/default-policy.json \
           /tmp/policy &
           sleep 1
-      - name: install api deps for planner import
-        working-directory: services/api
-        run: npm ci
       - name: run evals
         working-directory: packages/evals
         run: |

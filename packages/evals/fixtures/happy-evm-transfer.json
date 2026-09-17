@@ -1,5 +1,16 @@
 {
   "id": "happy-evm-transfer",
   "intent": "Send 5 MOCK_USDC to Alice",
+  "plan": {
+    "schemaVersion": "1",
+    "chain": "anvil",
+    "summary": "Transfer 5 MOCK_USDC to allowlisted recipient",
+    "steps": [{
+      "action": "transfer",
+      "token": "MOCK_USDC",
+      "to": "0x1111111111111111111111111111111111111111",
+      "amount": "5"
+    }]
+  },
   "expect": { "ok": true, "chain": "anvil", "action": "transfer" }
 }

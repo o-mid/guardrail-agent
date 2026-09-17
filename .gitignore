@@ -40,5 +40,8 @@ contracts/lib/
 # OS
 Thumbs.db
 
+# live planner eval traces (EVAL_PLANNER=openai)
+packages/evals/traces/
+
 # Vercel CLI local link
 .vercel
