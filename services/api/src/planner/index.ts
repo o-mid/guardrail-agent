@@ -16,5 +16,5 @@ export function createPlanner(chat?: ChatCompletionsFn): Planner {
   return new MockPlanner();
 }
 
-export type { Planner, PlanV1 } from "./types.js";
+export type { Planner, PlanV1, PlannerUsage, PlannerCallMeta } from "./types.js";
 export { OpenAIPlanner } from "./openai.js";

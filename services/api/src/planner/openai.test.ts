@@ -66,6 +66,38 @@ describe("openai planner recordings", { concurrency: false }, () => {
       "115792089237316195423570985008687907853269984665640564039457584007913129639935",
     );
   });
+
+  it("exposes token usage from a recorded completion body", async () => {
+    const planner = new OpenAIPlanner({
+      apiKey: "sk-test",
+      model: "gpt-4o-mini",
+      chat: replay("valid-transfer.json"),
+    });
+    await planner.plan({
+      intent: "Send 5 MOCK_USDC to Alice",
+      policySummary: { maxAmount: "100" },
+    });
+    const call = planner.lastCall();
+    assert.equal(call.model, "gpt-4o-mini");
+    assert.equal(call.usage?.promptTokens, 247);
+    assert.equal(call.usage?.completionTokens, 61);
+  });
+
+  it("keeps recorded usage after a schema miss", async () => {
+    const planner = new OpenAIPlanner({
+      apiKey: "sk-test",
+      model: "gpt-4o-mini",
+      chat: replay("schema-miss.json"),
+    });
+    await assert.rejects(
+      () => planner.plan({ intent: "transfer with extra keys", policySummary: {} }),
+      /planner schema/,
+    );
+    const call = planner.lastCall();
+    assert.equal(call.model, "gpt-4o-mini");
+    assert.equal(call.usage?.promptTokens, 251);
+    assert.equal(call.usage?.completionTokens, 73);
+  });
 });
 
 describe("createPlanner fail closed", { concurrency: false }, () => {

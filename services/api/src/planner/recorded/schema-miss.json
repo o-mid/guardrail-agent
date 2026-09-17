@@ -11,5 +11,10 @@
       },
       "finish_reason": "stop"
     }
-  ]
+  ],
+  "usage": {
+    "prompt_tokens": 251,
+    "completion_tokens": 73,
+    "total_tokens": 324
+  }
 }

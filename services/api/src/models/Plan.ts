@@ -16,6 +16,18 @@ const planSchema = new Schema(
     rawModelJson: { type: Schema.Types.Mixed, required: true },
     rejectionReasons: { type: [String], default: [] },
     policyVersion: { type: Number, required: true },
+    plannerLatencyMs: { type: Number, default: null },
+    plannerModel: { type: String, default: null },
+    usage: {
+      type: new Schema(
+        {
+          promptTokens: { type: Number, required: true },
+          completionTokens: { type: Number, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
   },
   { timestamps: true },
 );

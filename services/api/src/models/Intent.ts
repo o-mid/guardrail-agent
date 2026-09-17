@@ -11,6 +11,18 @@ const intentSchema = new Schema(
       index: true,
     },
     chainHint: { type: String, default: null },
+    plannerLatencyMs: { type: Number, default: null },
+    plannerModel: { type: String, default: null },
+    usage: {
+      type: new Schema(
+        {
+          promptTokens: { type: Number, required: true },
+          completionTokens: { type: Number, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
   },
   { timestamps: true },
 );

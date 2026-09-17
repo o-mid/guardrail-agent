@@ -1,5 +1,5 @@
 import { planV1Schema } from "@guardrail/plan-schema";
-import type { PlanV1, Planner } from "./types.js";
+import type { PlanV1, Planner, PlannerCallMeta, PlannerUsage } from "./types.js";
 
 export type ChatCompletionBody = {
   model: string;
@@ -9,7 +9,13 @@ export type ChatCompletionBody = {
 };
 
 export type ChatCompletionResult = {
+  model?: string;
   choices?: Array<{ message?: { content?: string | null } }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
 };
 
 export type ChatCompletionsFn = (body: ChatCompletionBody) => Promise<ChatCompletionResult>;
@@ -46,6 +52,7 @@ export function postChatCompletions(opts: { apiKey: string; baseUrl?: string }):
 export class OpenAIPlanner implements Planner {
   private readonly model: string;
   private readonly chat: ChatCompletionsFn;
+  private callMeta: PlannerCallMeta = {};
 
   constructor(opts: { apiKey: string; model: string; chat?: ChatCompletionsFn; baseUrl?: string }) {
     if (!opts.chat && !opts.apiKey) {
@@ -55,7 +62,12 @@ export class OpenAIPlanner implements Planner {
     this.chat = opts.chat ?? postChatCompletions({ apiKey: opts.apiKey, baseUrl: opts.baseUrl });
   }
 
+  lastCall(): PlannerCallMeta {
+    return this.callMeta;
+  }
+
   async plan(input: { intent: string; policySummary: object; chainHint?: string | null }): Promise<PlanV1> {
+    this.callMeta = { model: this.model, usage: null };
     const result = await this.chat({
       model: this.model,
       temperature: 0,
@@ -72,12 +84,25 @@ export class OpenAIPlanner implements Planner {
         },
       ],
     });
+    this.callMeta = {
+      model: result.model ?? this.model,
+      usage: usageFromResult(result),
+    };
     const content = result.choices?.[0]?.message?.content;
     if (!content) {
       throw new Error("planner empty completion");
     }
     return parsePlanJson(content);
   }
+}
+
+function usageFromResult(result: ChatCompletionResult): PlannerUsage | null {
+  const promptTokens = result.usage?.prompt_tokens;
+  const completionTokens = result.usage?.completion_tokens;
+  if (typeof promptTokens !== "number" || typeof completionTokens !== "number") {
+    return null;
+  }
+  return { promptTokens, completionTokens };
 }
 
 function parsePlanJson(content: string): PlanV1 {
