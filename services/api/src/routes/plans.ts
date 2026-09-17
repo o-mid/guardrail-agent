@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Plan, PlanStep } from "../models/index.js";
+import { AuditEvent, Intent, Plan, PlanStep } from "../models/index.js";
 import { requireAuth, type AuthedRequest } from "../middleware/auth.js";
 import { approveStep, rejectPlan } from "../services/execution.js";
 
@@ -11,8 +11,16 @@ plansRouter.get("/plans/:id", requireAuth, async (req: AuthedRequest, res) => {
     res.status(404).json({ error: "not_found" });
     return;
   }
-  const steps = await PlanStep.find({ planId: plan.id }).sort({ index: 1 });
-  res.json({ plan, steps });
+  const intentId = String(plan.intentId);
+  const [steps, intent, auditEvents] = await Promise.all([
+    PlanStep.find({ planId: plan.id }).sort({ index: 1 }),
+    Intent.findOne({ _id: plan.intentId, userId: req.userId }),
+    AuditEvent.find({
+      userId: req.userId,
+      entityId: { $in: [plan.id, intentId] },
+    }).sort({ createdAt: 1 }),
+  ]);
+  res.json({ plan, steps, intent, auditEvents });
 });
 
 plansRouter.post("/plans/:id/steps/:index/approve", requireAuth, async (req: AuthedRequest, res) => {
