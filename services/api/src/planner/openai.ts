@@ -1,3 +1,4 @@
+import { planV1Schema } from "@guardrail/plan-schema";
 import type { PlanV1, Planner } from "./types.js";
 
 export type ChatCompletionBody = {
@@ -83,38 +84,21 @@ function parsePlanJson(content: string): PlanV1 {
   } catch {
     throw new Error("planner returned non-json");
   }
-  return asPlanV1(parsed);
+  const checked = planV1Schema.safeParse(parsed);
+  if (!checked.success) {
+    const detail = checked.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
+    throw new Error(`planner schema: ${detail}`);
+  }
+  return {
+    schemaVersion: checked.data.schemaVersion,
+    chain: checked.data.chain,
+    summary: checked.data.summary,
+    steps: checked.data.steps,
+  };
 }
 
 function unwrapJson(content: string): string {
   const trimmed = content.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
   return fenced?.[1] ?? trimmed;
-}
-
-function asPlanV1(value: unknown): PlanV1 {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error("planner returned non-object");
-  }
-  const v = value as Record<string, unknown>;
-  if (v.schemaVersion !== "1") {
-    throw new Error("planner schemaVersion");
-  }
-  if (v.chain !== "anvil" && v.chain !== "solana-local") {
-    throw new Error("planner chain");
-  }
-  if (typeof v.summary !== "string" || v.summary.length === 0) {
-    throw new Error("planner summary");
-  }
-  if (!Array.isArray(v.steps) || v.steps.length === 0) {
-    throw new Error("planner steps");
-  }
-  const steps: Array<Record<string, unknown>> = [];
-  for (const step of v.steps) {
-    if (!step || typeof step !== "object" || Array.isArray(step)) {
-      throw new Error("planner step");
-    }
-    steps.push(step as Record<string, unknown>);
-  }
-  return { schemaVersion: "1", chain: v.chain, summary: v.summary, steps };
 }

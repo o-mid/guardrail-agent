@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "build:schema": "npm install --prefix ../../packages/plan-schema && npm run build --prefix ../../packages/plan-schema",
+    "prebuild": "npm run build:schema",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "test": "node --import tsx --test src/**/*.test.ts",
     "seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
+    "@guardrail/plan-schema": "file:../../packages/plan-schema",
     "@solana/web3.js": "^1.95.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
