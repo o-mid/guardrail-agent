@@ -9,6 +9,7 @@
     "prebuild": "npm run build:schema",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
+    "pretest": "npm run build:schema",
     "test": "node --import tsx --test src/**/*.test.ts",
     "seed": "tsx src/scripts/seed.ts"
   },

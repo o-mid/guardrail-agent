@@ -38,6 +38,7 @@ jobs:
         run: npm install && npm run build
       - run: npm ci
       - run: npx tsc -p tsconfig.json --noEmit
+      - run: npm test
 
   vault:
     runs-on: ubuntu-latest
