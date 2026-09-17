@@ -220,7 +220,7 @@ export default function ComposePage() {
       ) : null}
 
       {result?.plan ? (
-        <section className="mt-10 overflow-hidden rounded-lg border border-border bg-card [box-shadow:var(--shadow-md)] motion-safe:animate-mark-fade-in">
+        <section className="mt-10 mb-16 overflow-hidden rounded-lg border border-border bg-card [box-shadow:var(--shadow-md)] motion-safe:animate-mark-fade-in">
           <p aria-live="polite" aria-atomic="true" className="sr-only">
             Plan status: {result.plan.status.replace(/_/g, " ")}
           </p>
