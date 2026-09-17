@@ -54,7 +54,7 @@ Demo login: `demo@guardrail.local` / `demopass123`
 | Layer | URL |
 |-------|-----|
 | UI (Vercel) | https://guardrail-agent-six.vercel.app |
-| API (Railway) | https://api-production-3231.up.railway.app |
+| API (Railway) | https://api-production-c5d48.up.railway.app |
 
 Stack on Railway: MongoDB + Go policy + demo vault + Anvil (+ contract deploy on boot) + Express API. `NEXT_PUBLIC_API_URL` on Vercel points at the Railway API. Demo login: `demo@guardrail.local` / `demopass123`.
 
