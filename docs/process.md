@@ -142,3 +142,5 @@ Append-only `auditevents` collection. Filter via `GET /api/audit?entityId=...`.
 | `plan.cancelled` | User rejected plan | `{}` |
 
 Policy codes (not audit types, but stored in rejection payloads and plan rows): `chain_not_allowed`, `max_steps_exceeded`, `action_not_allowed`, `mint_not_allowed`, `infinite_approve`, `slippage_too_high`, `recipient_not_allowed`, `amount_over_cap`.
+
+Each of those writes also emits one JSON line on API stdout: `event`, `intentId`, `planId`, `policyCodes`, `latencyMs`, `tokens`. Same `AuditEvent` rows as before; no tracing vendor.

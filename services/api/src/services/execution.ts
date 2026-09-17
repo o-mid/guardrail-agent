@@ -1,4 +1,6 @@
-import { AuditEvent, Plan, PlanStep } from "../models/index.js";
+import { Plan, PlanStep } from "../models/index.js";
+import { recordPlanEvent } from "../observability/planLog.js";
+import type { PlannerUsage } from "../planner/types.js";
 import { validatePlan } from "../policy/client.js";
 import { publishPlanEvent } from "../sse/hub.js";
 import { loadPolicy } from "./intentPipeline.js";
@@ -41,6 +43,27 @@ export async function recheckPlanPolicy(
   return validatePlan(storedPlanJson(plan, steps), { version: policy.version, rules: policy.rules });
 }
 
+function tokensOf(usage: { promptTokens?: number; completionTokens?: number } | null | undefined): PlannerUsage | null {
+  if (!usage || typeof usage.promptTokens !== "number" || typeof usage.completionTokens !== "number") return null;
+  return { promptTokens: usage.promptTokens, completionTokens: usage.completionTokens };
+}
+
+function planLogFields(plan: {
+  id?: string;
+  _id?: unknown;
+  intentId?: unknown;
+  plannerLatencyMs?: number | null;
+  usage?: { promptTokens?: number; completionTokens?: number } | null;
+}) {
+  const planId = plan.id ?? (plan._id != null ? String(plan._id) : null);
+  return {
+    intentId: plan.intentId != null ? String(plan.intentId) : null,
+    planId,
+    latencyMs: plan.plannerLatencyMs ?? null,
+    tokens: tokensOf(plan.usage),
+  };
+}
+
 export async function vaultPolicyGate(stored: StoredPlanForPolicy): Promise<ExecResult | null> {
   let validation;
   try {
@@ -78,11 +101,12 @@ export async function approveStep(userId: string, planId: string, index: number)
   try {
     validation = await recheckPlanPolicy(userId, plan, steps);
   } catch (err) {
-    await AuditEvent.create({
+    await recordPlanEvent({
       type: "step.policy_unreachable",
       entityId: plan.id,
       userId,
       payload: { index, error: String(err) },
+      ...planLogFields(plan),
     });
     publishPlanEvent(userId, plan.id, "step", {
       type: "policy_unreachable",
@@ -96,11 +120,13 @@ export async function approveStep(userId: string, planId: string, index: number)
   const schemaErrors = validation.schemaErrors ?? [];
   const humanMessages = validation.humanMessages ?? [];
   if (!validation.ok) {
-    await AuditEvent.create({
+    await recordPlanEvent({
       type: "step.rejected_policy",
       entityId: plan.id,
       userId,
       payload: { index, policyCodes, schemaErrors, humanMessages },
+      policyCodes,
+      ...planLogFields(plan),
     });
     publishPlanEvent(userId, plan.id, "step", {
       type: "policy_rejected",
@@ -125,11 +151,12 @@ export async function approveStep(userId: string, planId: string, index: number)
 
   plan.status = "executing";
   await plan.save();
-  await AuditEvent.create({
+  await recordPlanEvent({
     type: "step.approved",
     entityId: plan.id,
     userId,
     payload: { index },
+    ...planLogFields(plan),
   });
   publishPlanEvent(userId, plan.id, "step", { type: "approved", index, status: plan.status });
 
@@ -151,11 +178,12 @@ export async function approveStep(userId: string, planId: string, index: number)
     await step.save();
     plan.status = "failed";
     await plan.save();
-    await AuditEvent.create({
+    await recordPlanEvent({
       type: "step.failed",
       entityId: plan.id,
       userId,
       payload: { index, error: step.error },
+      ...planLogFields(plan),
     });
     publishPlanEvent(userId, plan.id, "step", { type: "failed", index, error: step.error, status: plan.status });
     return { plan, step, result };
@@ -167,11 +195,12 @@ export async function approveStep(userId: string, planId: string, index: number)
   step.status = "succeeded";
   step.txHash = result.txHash ?? null;
   await step.save();
-  await AuditEvent.create({
+  await recordPlanEvent({
     type: "step.succeeded",
     entityId: plan.id,
     userId,
     payload: { index, txHash: step.txHash },
+    ...planLogFields(plan),
   });
   publishPlanEvent(userId, plan.id, "step", {
     type: "succeeded",
@@ -184,7 +213,7 @@ export async function approveStep(userId: string, planId: string, index: number)
   if (remaining === 0) {
     plan.status = "completed";
     await plan.save();
-    await AuditEvent.create({ type: "plan.completed", entityId: plan.id, userId, payload: {} });
+    await recordPlanEvent({ type: "plan.completed", entityId: plan.id, userId, payload: {}, ...planLogFields(plan) });
     publishPlanEvent(userId, plan.id, "plan", { type: "completed", status: plan.status });
   } else {
     plan.status = "awaiting_approval";
@@ -206,11 +235,12 @@ export async function rejectPlan(userId: string, planId: string) {
     { planId, status: { $in: ["pending", "approved", "dry_running", "submitting"] } },
     { $set: { status: "cancelled" } },
   );
-  await AuditEvent.create({
+  await recordPlanEvent({
     type: "plan.cancelled",
     entityId: plan.id,
     userId,
     payload: {},
+    ...planLogFields(plan),
   });
   publishPlanEvent(userId, plan.id, "plan", { type: "cancelled", status: plan.status });
   return { plan };

@@ -98,3 +98,5 @@ This is a portfolio / interview demo, not production infrastructure.
 ## CI
 
 GitHub Actions: Go policy tests, API typecheck and tests, vault typecheck, Forge tests, Next typecheck, canned-plan eval fixtures against the policy service.
+
+Plan lifecycle is one JSON line per `AuditEvent` on the API process (`intentId`, `planId`, `policyCodes`, `latencyMs`, `tokens`). No tracing vendor.
