@@ -1,6 +1,6 @@
 # Architecture
 
-Guardrail Agent is a local demo stack. Natural language goes in, a structured plan comes out, Go policy says yes or no, a human approves each step, and only then does the API touch chain RPCs. Model output never becomes raw calldata or instruction bytes.
+This repo is a local demo: Compose, Anvil, solana-test-validator. The API takes an intent, asks a planner for JSON, sends that JSON to Go policy, waits for a human to approve each step, then dry-runs and broadcasts. Calldata and Solana instruction bytes are built by executors from allowlisted actions. The model never produces them.
 
 ## Context
 
@@ -26,7 +26,7 @@ flowchart LR
   API -->|broadcast| Solana
 ```
 
-The web app is a thin client. It does not talk to chains directly. Orchestration and persistence live in the API. Private keys live in the demo vault process only — the API builds unsigned txs, asks the vault to sign after HITL, then broadcasts. Policy is a separate process so schema and rule checks are not buried inside Express route handlers.
+The web app is a thin client. It does not talk to chains directly. Orchestration and persistence live in the API. Private keys live in the demo vault process only: the API builds unsigned txs, asks the vault to sign after HITL, then broadcasts. Policy is a separate process so schema and rule checks are not buried inside Express route handlers.
 
 ## Service responsibilities
 
@@ -35,7 +35,7 @@ The web app is a thin client. It does not talk to chains directly. Orchestration
 | **Web** (`apps/web`) | Login, compose intent, view plan steps, approve/reject, audit timeline. Reads/writes via REST. Subscribes to SSE for live step updates. |
 | **Express API** (`services/api`) | Auth (email/password, optional SIWE), intent pipeline, plan CRUD, step approval, audit log, chain executors. Owns MongoDB. Calls policy on every new plan. Does not hold chain private keys. |
 | **Go policy** (`services/policy`) | Stateless HTTP service. Validates plan JSON against JSON Schema, then applies allowlists and caps from the policy document. Returns machine codes and human messages. |
-| **Demo vault** (`services/vault`) | Holds Anvil / Solana demo keys. Signs EVM txs/messages and Solana txs over a local Bearer token. Not threshold MPC — production analog is MPC/HSM. |
+| **Demo vault** (`services/vault`) | Holds Anvil / Solana demo keys. Signs EVM txs/messages and Solana txs over a local Bearer token. Not threshold MPC. Production analog is MPC/HSM. |
 | **MongoDB** | Users, refresh tokens, policy versions, intents, plans, plan steps, audit events, SIWE nonces. |
 | **Anvil** | Local EVM (chain id 31337). Mock ERC-20 tokens and a swap router deployed via Foundry. |
 | **Solana test validator** | Local Solana RPC. MVP executor supports native SOL transfer only. |
@@ -88,14 +88,14 @@ Plans always store `rawModelJson` for debugging and audit, even when rejected.
 
 ## Stack choices
 
-**Express + Mongo:** Deliberate for a portfolio full-stack shape. Auth, CRUD, SSE, and orchestration fit fine here. Not claiming this is the production choice for high-volume trading.
+**Express + Mongo.** Auth, CRUD, SSE, and orchestration fit here because this is a portfolio full-stack shape. Not claiming this is the production choice for high-volume trading.
 
-**Go for policy:** Schema compilation and rule evaluation are isolated, testable, and fast. The API stays dumb about rule details: it forwards JSON and stores the result. Policy codes (`infinite_approve`, `recipient_not_allowed`, etc.) are stable contracts for the UI and eval fixtures.
+**Go for policy.** Schema compilation and rule evaluation are isolated, testable, and fast. The API stays dumb about rule details: it forwards JSON and stores the result. Policy codes (`infinite_approve`, `recipient_not_allowed`, etc.) are stable contracts for the UI and eval fixtures.
 
-**Vault for keys:** Demo keys moved out of the API so a compromised orchestrator is not automatically a key dump. Still a single-process signer with a shared token — not multi-party computation. Talk track: "MPC-shaped boundary; production would swap this for Fireblocks-style MPC or an HSM."
+**Vault for keys.** Demo keys moved out of the API so a compromised orchestrator is not automatically a key dump. Still a single-process signer with a shared Bearer token, not multi-party computation. Talk track: "MPC-shaped boundary; production would swap this for Fireblocks-style MPC or an HSM."
 
-**Next.js + Tailwind:** Standard React app shell. No chain SDK in the browser.
+**Next.js + Tailwind.** Standard React app shell. No chain SDK in the browser.
 
-**Foundry mocks:** Anvil ships in compose under the `full` profile. Contract addresses land in `contracts/deployments/anvil.json` after `forge script`.
+**Foundry mocks.** Anvil ships in compose under the `full` profile. Contract addresses land in `contracts/deployments/anvil.json` after `forge script`.
 
-**MockPlanner default:** Keyword router in `services/api/src/planner/mock.ts`. Zero API keys. `PLANNER=openai` with `OPENAI_API_KEY` uses an OpenAI-compatible chat client; output is schema-checked then policy-gated. openai without a key fails closed (no silent mock).
+**MockPlanner default.** Keyword router in `services/api/src/planner/mock.ts`. Zero API keys. `PLANNER=openai` with `OPENAI_API_KEY` uses an OpenAI-compatible chat client; output is schema-checked then policy-gated. openai without a key fails closed (no silent mock).
