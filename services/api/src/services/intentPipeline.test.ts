@@ -68,11 +68,17 @@ function intentDoc(input: Record<string, unknown> = {}) {
 
 describe("intent pipeline planner cost", { concurrency: false }, () => {
   const originalFetch = globalThis.fetch;
+  const originalLog = console.log;
   let createdPlans: Array<Record<string, unknown>>;
+  let logs: string[];
 
   beforeEach(() => {
     createdPlans = [];
+    logs = [];
     setPlanner(new MockPlanner());
+    console.log = (msg?: unknown) => {
+      logs.push(String(msg));
+    };
     mock.method(Intent, "create", async (input: Record<string, unknown>) => intentDoc(input));
     mock.method(AuditEvent, "create", async (doc: unknown) => doc);
     mock.method(Policy, "findOne", () => query(null));
@@ -98,6 +104,7 @@ describe("intent pipeline planner cost", { concurrency: false }, () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    console.log = originalLog;
     mock.restoreAll();
     setPlanner(new MockPlanner());
   });
@@ -153,5 +160,18 @@ describe("intent pipeline planner cost", { concurrency: false }, () => {
     assert.equal(plan?.status, "rejected_policy");
     assert.equal(typeof plan?.plannerLatencyMs, "number");
     assert.equal(plan?.usage, null);
+    const lifecycle = logs
+      .map((line) => {
+        try {
+          return JSON.parse(line) as { event?: string; policyCodes?: string[]; intentId?: string; planId?: string };
+        } catch {
+          return null;
+        }
+      })
+      .find((row) => row?.event === "plan.rejected_policy");
+    assert.ok(lifecycle);
+    assert.equal(lifecycle.intentId, "intent1");
+    assert.equal(lifecycle.planId, "plan1");
+    assert.deepEqual(lifecycle.policyCodes, ["infinite_approve"]);
   });
 });

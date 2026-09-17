@@ -104,6 +104,7 @@ function storedFor(
 
 describe("approve and sign policy re-check", { concurrency: false }, () => {
   const originalFetch = globalThis.fetch;
+  const originalLog = console.log;
   let fetchCalls: Array<{ url: string; body?: { plan?: { steps?: unknown[] } } }>;
   let audits: Array<{ type: string; payload?: Record<string, unknown> }>;
   let claimed: number;
@@ -114,6 +115,7 @@ describe("approve and sign policy re-check", { concurrency: false }, () => {
     audits = [];
     claimed = 0;
     ran = 0;
+    console.log = () => {};
     mock.method(Policy, "findOne", () => query(null));
     mock.method(AuditEvent, "create", async (doc: { type: string; payload?: Record<string, unknown> }) => {
       audits.push(doc);
@@ -147,6 +149,7 @@ describe("approve and sign policy re-check", { concurrency: false }, () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    console.log = originalLog;
     mock.restoreAll();
     setStepRunner(async () => ({ ok: true, dryRunOk: true, txHash: "0xnone" }));
   });

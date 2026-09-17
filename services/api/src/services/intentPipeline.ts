@@ -1,4 +1,5 @@
-import { AuditEvent, Intent, Plan, PlanStep, Policy } from "../models/index.js";
+import { Intent, Plan, PlanStep, Policy } from "../models/index.js";
+import { recordPlanEvent } from "../observability/planLog.js";
 import { createPlanner } from "../planner/index.js";
 import type { Planner, PlannerUsage } from "../planner/types.js";
 import { defaultRules, validatePlan, type PolicyRules } from "../policy/client.js";
@@ -31,11 +32,12 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     status: "planning",
     chainHint: chainHint ?? null,
   });
-  await AuditEvent.create({
+  await recordPlanEvent({
     type: "intent.received",
     entityId: intent.id,
     userId,
     payload: { text },
+    intentId: intent.id,
   });
 
   const policy = await loadPolicy(userId);
@@ -54,11 +56,14 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     intent.plannerModel = cost.plannerModel;
     intent.usage = cost.usage;
     await intent.save();
-    await AuditEvent.create({
+    await recordPlanEvent({
       type: "intent.planner_unavailable",
       entityId: intent.id,
       userId,
       payload: { error: String(err) },
+      intentId: intent.id,
+      latencyMs: cost.plannerLatencyMs,
+      tokens: cost.usage,
     });
     return { intent, plan: null };
   }
@@ -73,11 +78,14 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
     intent.plannerModel = cost.plannerModel;
     intent.usage = cost.usage;
     await intent.save();
-    await AuditEvent.create({
+    await recordPlanEvent({
       type: "intent.policy_unreachable",
       entityId: intent.id,
       userId,
       payload: { error: String(err) },
+      intentId: intent.id,
+      latencyMs: cost.plannerLatencyMs,
+      tokens: cost.usage,
     });
     return { intent, plan: null };
   }
@@ -104,7 +112,7 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
       plannerModel: cost.plannerModel,
       usage: cost.usage,
     });
-    await AuditEvent.create({
+    await recordPlanEvent({
       type: schemaFail ? "plan.rejected_schema" : "plan.rejected_policy",
       entityId: plan.id,
       userId,
@@ -113,6 +121,11 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
         schemaErrors,
         humanMessages,
       },
+      intentId: intent.id,
+      planId: plan.id,
+      policyCodes,
+      latencyMs: cost.plannerLatencyMs,
+      tokens: cost.usage,
     });
     return {
       intent,
@@ -149,11 +162,15 @@ export async function createIntentFlow(userId: string, text: string, chainHint?:
 
   intent.status = "planned";
   await intent.save();
-  await AuditEvent.create({
+  await recordPlanEvent({
     type: "plan.awaiting_approval",
     entityId: plan.id,
     userId,
     payload: { chain: plan.chain, steps: planJson.steps.length },
+    intentId: intent.id,
+    planId: plan.id,
+    latencyMs: cost.plannerLatencyMs,
+    tokens: cost.usage,
   });
 
   return { intent, plan, validation };
