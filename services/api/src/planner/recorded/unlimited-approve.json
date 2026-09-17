@@ -1,0 +1,15 @@
+{
+  "id": "chatcmpl-recorded-unlimited-approve",
+  "object": "chat.completion",
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"schemaVersion\":\"1\",\"chain\":\"anvil\",\"summary\":\"Approve unlimited MOCK_USDC for spender\",\"steps\":[{\"action\":\"approve\",\"token\":\"MOCK_USDC\",\"spender\":\"0xEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"amount\":\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"}]}"
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}

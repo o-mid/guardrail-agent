@@ -33,8 +33,12 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: services/api/package-lock.json
+      - name: build plan-schema
+        working-directory: packages/plan-schema
+        run: npm install && npm run build
       - run: npm ci
       - run: npx tsc -p tsconfig.json --noEmit
+      - run: npm test
 
   vault:
     runs-on: ubuntu-latest

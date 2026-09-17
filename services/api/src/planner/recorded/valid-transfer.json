@@ -1,0 +1,15 @@
+{
+  "id": "chatcmpl-recorded-valid-transfer",
+  "object": "chat.completion",
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"schemaVersion\":\"1\",\"chain\":\"anvil\",\"summary\":\"Transfer 5 MOCK_USDC to allowlisted recipient\",\"steps\":[{\"action\":\"transfer\",\"token\":\"MOCK_USDC\",\"to\":\"0x1111111111111111111111111111111111111111\",\"amount\":\"5\"}]}"
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}

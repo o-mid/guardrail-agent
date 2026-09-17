@@ -98,4 +98,4 @@ Plans always store `rawModelJson` for debugging and audit, even when rejected.
 
 **Foundry mocks:** Anvil ships in compose under the `full` profile. Contract addresses land in `contracts/deployments/anvil.json` after `forge script`.
 
-**MockPlanner default:** Keyword router in `services/api/src/planner/mock.ts`. Zero API keys. LLM planner is env-gated (`PLANNER=openai`) and still goes through the same policy gate.
+**MockPlanner default:** Keyword router in `services/api/src/planner/mock.ts`. Zero API keys. `PLANNER=openai` with `OPENAI_API_KEY` uses an OpenAI-compatible chat client; output is schema-checked then policy-gated. openai without a key fails closed (no silent mock).
