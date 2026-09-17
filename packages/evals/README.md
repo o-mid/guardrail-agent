@@ -1,8 +1,8 @@
 # Evals
 
-Fixture evals POST canned `plan` JSON at the Go policy service. No planner, no `OPENAI_API_KEY`. GitHub Actions runs this path only.
+CI posts canned `plan` JSON at the Go policy service. There is no planner on that path and no `OPENAI_API_KEY`. GitHub Actions runs fixtures only.
 
-Live planner traces are a separate command (`npm run test:live`) and stay off CI.
+`npm run test:live` records live planner traces. It is opt-in and not in CI.
 
 ## Add a fixture
 
@@ -37,7 +37,7 @@ A mismatch prints expected vs actual and fails the process.
 
 ## Frozen denies
 
-These ids must stay in `fixtures/` and must keep failing. CI fails if the file disappears or the case starts passing:
+These ids stay in `fixtures/` and have to keep failing. Delete the file or let the case pass and CI fails:
 
 | id | must keep |
 |----|-----------|
@@ -45,7 +45,7 @@ These ids must stay in `fixtures/` and must keep failing. CI fails if the file d
 | `policy-bad-recipient` | `recipient_not_allowed` |
 | `injection-schema-junk` | schema errors |
 
-Changing `expect.ok` to `true` on those files is not enough to silence CI. The freeze checks the live policy result.
+Flipping `expect.ok` to `true` on those files does not silence CI. The freeze checks the live policy result.
 
 ## Run
 

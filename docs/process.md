@@ -43,7 +43,7 @@ sequenceDiagram
   A-->>W: txHash + updated steps
 ```
 
-Multi-step plans require sequential approval. Step N cannot run until step N-1 is `succeeded`. Note: EVM swap is one plan step; the executor performs router approve + swap inside that step.
+Multi-step plans require sequential approval. Step N cannot run until step N-1 is `succeeded`. EVM swap is one plan step; the executor performs router approve + swap inside that step.
 
 ## Reject path (infinite approve)
 
@@ -62,8 +62,7 @@ The executor also blocks infinite approve strings as a second line of defense (`
 1. User submits `Send 5 MOCK_USDC to 0xEvil`.
 2. MockPlanner emits a transfer to a non-allowlisted address.
 3. Go policy returns `recipient_not_allowed`.
-4. Same terminal plan status and loud UI as infinite approve — different code and headline.
-5. Interview point: policy is a product with multiple first-class reject paths, not a single trick.
+4. Same terminal plan status and loud UI as infinite approve, different code and headline.
 
 Other reject examples:
 
@@ -112,14 +111,15 @@ Idempotency: approving an already `succeeded` step is a no-op (`noop: true` in t
 `approveStep` in `services/api/src/services/execution.ts`:
 
 1. **Guards:** Plan owned by user, plan status approvable, step is `pending` or `failed`, previous step succeeded if index > 0.
-2. **Record approval:** `step.status = approved`, `plan.status = executing`, audit `step.approved`, SSE push.
-3. **Dry-run:** `step.status = dry_running`. Executor runs:
+2. **Policy re-check:** Re-run Go `/v1/validate` on the stored step payloads with `loadPolicy(userId)` (latest user-scoped or global rules, not a frozen copy from plan create). Fail closed if policy is unreachable.
+3. **Record approval:** `step.status = approved`, `plan.status = executing`, audit `step.approved`, SSE push.
+4. **Dry-run:** `step.status = dry_running`. Executor runs:
    - EVM: `Contract.staticCall` before broadcast (`evm.ts`).
    - Solana: `connection.simulateTransaction` before `sendAndConfirmTransaction` (`solana.ts`).
-4. **On dry-run failure:** `step.status = failed`, `plan.status = failed`, audit `step.failed`. Stops.
-5. **On dry-run success:** `step.status = submitting`, then broadcast.
-6. **On broadcast success:** `step.status = succeeded`, `txHash` stored, audit `step.succeeded`.
-7. **Plan rollup:** All steps done -> `plan.completed`. Else -> `awaiting_approval` for the next human click.
+5. **On dry-run failure:** `step.status = failed`, `plan.status = failed`, audit `step.failed`. Stops.
+6. **On dry-run success:** `step.status = submitting`, then broadcast. Executors re-run `/v1/validate` immediately before `vaultSignEvmTx` / `vaultSignSolanaTx`.
+7. **On broadcast success:** `step.status = succeeded`, `txHash` stored, audit `step.succeeded`.
+8. **Plan rollup:** All steps done -> `plan.completed`. Else -> `awaiting_approval` for the next human click.
 
 There is no autonomous execution path when `allowAutonomous` is false (default). Every step needs an explicit approve POST.
 

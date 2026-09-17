@@ -1,6 +1,6 @@
 # Threat model
 
-Guardrail Agent treats model output as untrusted input. Plans are structural JSON only. Executors map allowlisted actions to calldata / instructions. Humans approve each step before submit. Demo chain keys live in a separate vault process.
+Treat planner output as untrusted. Plans are structural JSON only; executors map allowlisted actions to calldata / instructions. A human approves each step before submit. Demo chain keys live in a separate vault process.
 
 What this repo is not (local chains, demo vault, Express still able to call the vault, hosted MockPlanner, fixture evals) is listed in [production-gaps.md](production-gaps.md).
 
@@ -44,6 +44,6 @@ Mainnet trading, real threshold MPC / multi-party key shares, autonomous loops, 
 
 ## Residual risk
 
-Approve and vault-sign re-run Go `/v1/validate` on the current `PlanStep.payload` rows (not `rawModelJson`) using `loadPolicy(userId)` — the latest user-scoped or global rules, not a frozen copy from plan create. A later policy bump can reject a plan that passed at intent time. Mutating recipient or amount in Mongo should fail the approve claim and fail again immediately before `vaultSignEvmTx` / `vaultSignSolanaTx`, so skipping orchestration is harder than it was when only the intent-time gate existed.
+Approve and vault-sign re-run Go `/v1/validate` on the current `PlanStep.payload` rows (not `rawModelJson`) using `loadPolicy(userId)`. That is the latest user-scoped or global rules, not a frozen copy from plan create. A later policy bump can reject a plan that passed at intent time. Mutating recipient or amount in Mongo should fail the approve claim and fail again immediately before `vaultSignEvmTx` / `vaultSignSolanaTx`.
 
-If Express is compromised it can still omit those calls and ask the vault to sign with the same local Bearer token. The vault split keeps keys out of the API process and makes an MPC/HSM swap obvious; it is not threshold custody. Keep demo keys off any public network. See [production-gaps.md](production-gaps.md).
+If Express is compromised it can still omit those calls and ask the vault to sign with the same local Bearer token. The vault split keeps keys out of the API process and makes an MPC/HSM swap obvious. It is not threshold custody. Keep demo keys off any public network. See [production-gaps.md](production-gaps.md).
