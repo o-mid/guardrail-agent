@@ -2,7 +2,7 @@
 
 Local-only walkthrough. Budget about three minutes for an interviewer.
 
-**Release:** [v0.1.0](https://github.com/o-mid/guardrail-agent/releases/tag/v0.1.0) — MVP demo pack (docs, SIWE/nonce fixes, richer UI, operator guide).
+**Release:** [v0.1.0](https://github.com/o-mid/guardrail-agent/releases/tag/v0.1.0) - MVP demo pack (docs, SIWE/nonce fixes, richer UI, operator guide).
 
 ## Run locally
 
@@ -43,40 +43,40 @@ Created by `npm run seed`. You can register a new account instead; seed also ens
 
 **Wallet shortcuts on Login:**
 
-- **Sign in as demo** — email path with `demo@guardrail.local` / `demopass123`
-- **Sign in with Anvil demo account** — SIWE using Anvil #0 (no MetaMask)
-- **Sign in with Ethereum** — MetaMask / injected wallet SIWE (domain comes from the API)
+- **Sign in as demo** - email path with `demo@guardrail.local` / `demopass123`
+- **Sign in with Anvil demo account** - SIWE using Anvil #0 (no MetaMask)
+- **Sign in with Ethereum** - MetaMask / injected wallet SIWE (domain comes from the API)
 
 Demo EVM signer is Anvil account #0 (`0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`). Not a secret locally; still do not reuse on any public network.
 
 ## Operator guide
 
-Bottom-right **Guide** panel (collapsed until opened) walks the full loop (login → compose → accept → approve → two reject demos → audit). Skip any step or skip the tour; reopen anytime from the same control.
+Bottom-right **Guide** panel (collapsed until opened) walks the full loop: login, compose, accept, approve, two reject demos, audit. Skip any step or skip the tour; reopen anytime from the same control.
 
 ## Interviewer script (< 3 min)
 
 **0:00 Login**
 
-Open http://localhost:3000. The landing states the control-plane thesis. Open the console, then **Sign in as demo** (or type the demo user / Anvil demo SIWE). Land on Compose.
+Open http://localhost:3000. Open the console, then **Sign in as demo** (or type the demo user / Anvil demo SIWE). Land on Compose.
 
 **0:20 Accept path (EVM transfer)**
 
 - Click the **Allowlisted transfer** chip (fills `Send 5 MOCK_USDC to Alice`)
 - Create plan. Review decoded fields + live pipeline (pending → … → done).
 - Approve step 0. Point at tx hash.
-- One-liner: "Model output became JSON, policy allowlisted it, I clicked approve, vault signed, API broadcast."
+- What happened: model output became JSON, policy allowlisted it, you clicked approve, vault signed, API broadcast.
 
 **1:00 Reject A (infinite approve)**
 
 - Sentence: `Approve unlimited MOCK_USDC for 0xEvil`
 - Plan rejected. UI shows `infinite_approve` with the loud banner.
-- One-liner: "Max-uint approve passes schema but policy blocks it. No approve button, nothing hits the chain."
+- Max-uint approve passes schema. Policy blocks it. No approve button, nothing hits the chain.
 
 **1:25 Reject B (bad recipient)**
 
 - Sentence: `Send 5 MOCK_USDC to 0xEvil`
 - Plan rejected. UI shows `recipient_not_allowed`.
-- One-liner: "Same reject surface, different rule — policy is a product, not a single trick."
+- Same banner, different code.
 
 **1:40 Injection**
 
@@ -96,11 +96,11 @@ Open http://localhost:3000. The landing states the control-plane thesis. Open th
 **2:30 Audit**
 
 - Open Audit. Filters for rejects / success / steps. Open evidence from a plan event.
-- One-liner: "Every decision is logged. Rejects are first-class, not errors."
+- Rejects show up here the same way successes do.
 
 **2:50 Close**
 
-- Mention [threat-model.md](threat-model.md): model untrusted, keys in demo vault (not real MPC), local chains only.
+- [threat-model.md](threat-model.md): model untrusted, keys in demo vault (Bearer token, not MPC), local chains only.
 
 ## Screenshots
 
@@ -117,7 +117,7 @@ node scripts/capture-demo.mjs       # UI shots as demo user (+ guide frame)
 
 ![Login](demo/screenshots/02-login.png)
 
-Login lands on Compose. The old app hub is gone.
+Login lands on Compose.
 
 ### Compose
 
