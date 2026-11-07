@@ -1,0 +1,12 @@
+{
+  "kind": "mock-planner",
+  "planner": "mock",
+  "model": "mock",
+  "date": "2026-11-07T09:42:01.032Z",
+  "commit": "4fa6122e6101a6fe2e5baaae2f021c03c903a51d",
+  "repeats": 1,
+  "cases": 11,
+  "runs": 11,
+  "failed": 0,
+  "spentUsd": 0
+}

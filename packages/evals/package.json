@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --import tsx --test ./compare.test.ts && node --import tsx ./runner.ts",
-    "test:live": "node --import tsx ./live-runner.ts"
+    "test": "node --import tsx --test ./compare.test.ts ./attack-compare.test.ts && node --import tsx ./runner.ts && node --import tsx ./attack-runner.ts",
+    "test:live": "node --import tsx ./live-runner.ts",
+    "test:attacks": "node --import tsx ./attack-live.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

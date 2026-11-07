@@ -13,6 +13,8 @@ Policy stops a max-uint ERC-20 approve (`infinite_approve`) and a transfer to so
 - [Demo](docs/demo.md) - local setup, interviewer script, screenshots
 - [Threat model](docs/threat-model.md) - assets, controls, residual risk
 - [Production gaps](docs/production-gaps.md) - local chains, demo vault, hosted mock planner, fixture evals
+- [Scorecard](docs/scorecard.md) - firewall contract and the mock-planner run. Live model not executed.
+- [Interview notes](docs/interview-notes.md) - design choices for the /break-it walkthrough
 - [Changelog](docs/CHANGELOG.md)
 
 ## Stack
@@ -59,7 +61,15 @@ Demo login: `demo@guardrail.local` / `demopass123`
 
 Railway runs Mongo, Go policy, the demo vault, Anvil (contracts on boot), and Express. Vercel `NEXT_PUBLIC_API_URL` points at that API. Same demo login as local.
 
-Develop against Compose. The hosted pair is the always-on interview URL. It still runs `PLANNER=mock`.
+Develop against Compose. The hosted pair is the always-on interview URL. It still runs `PLANNER=mock`. `/break-it` and `/scorecard` run locally; this repo does not publish a new hosted URL for them. There is no screen recording in the repo. The three-minute walkthrough is [docs/demo-script.md](docs/demo-script.md).
+
+## What a run shows
+
+`/break-it` takes unauthenticated text against one standing invoice. Policy either blocks it, with a labeled simulation, or the API broadcasts on local Anvil. `/scorecard` reads `packages/evals/scorecard/firewall.json` and the mock traces next to it. On 7 Nov 2026 that file had 11 stored plans, 11 held, 0 failed. The mock pass had 11 runs, 0 failed, and spent 0 USD. Details and the extra policy codes are in [docs/scorecard.md](docs/scorecard.md).
+
+## What it does not show
+
+A live model has not been executed. The scorecard is not a safety claim. The hosted demo is still the mock router. Limits are in [docs/production-gaps.md](docs/production-gaps.md).
 
 ## Planner
 
@@ -69,7 +79,7 @@ Develop against Compose. The hosted pair is the always-on interview URL. It stil
 
 ## Evals
 
-CI posts canned `plan` JSON at Go policy. No planner, no `OPENAI_API_KEY`. A mismatch prints expected vs actual. Three denies stay frozen (`infinite_approve`, `recipient_not_allowed`, schema injection): delete the file or let the case pass and the job fails. Adding a fixture: [packages/evals/README.md](packages/evals/README.md).
+CI posts canned `plan` JSON at Go policy, then posts the attack set in `packages/evals/attacks/v1/` the same way. No planner, no API key. A mismatch prints expected vs actual. Three older denies stay frozen (`infinite_approve`, `recipient_not_allowed`, schema injection), and the attack ids in `FROZEN_ATTACKS` have to keep failing closed. Delete the file or let the case pass and the job fails. Adding a fixture: [packages/evals/README.md](packages/evals/README.md). The public write-up of the last local run is [docs/scorecard.md](docs/scorecard.md).
 
 ```bash
 cd packages/evals && npm install
@@ -86,7 +96,7 @@ EVAL_PLANNER=openai OPENAI_API_KEY=$OPENAI_API_KEY \
   POLICY_SERVICE_URL=http://127.0.0.1:8090 npm run test:live
 ```
 
-GitHub Actions does not run the live suite.
+GitHub Actions does not run the live suite on pull requests. `.github/workflows/live-attacks.yml` is a nightly job on this repository only. It skips, and does not fail the build, when `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, or the two `ARENA_USD_PER_MILLION_*` prices are unset. That skip is not a score. `EVAL_PLANNER=mock` is the local second score; traces from that run are in `packages/evals/scorecard/mock-traces/`.
 
 ## Limits
 

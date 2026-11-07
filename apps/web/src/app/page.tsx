@@ -42,6 +42,9 @@ export default function HomePage() {
             <Link href="/break-it" className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground hover:text-foreground">
               Try to break a payment
             </Link>
+            <Link href="/scorecard" className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground hover:text-foreground">
+              Scorecard
+            </Link>
             <Link href="/register" className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground hover:text-foreground">
               Register
             </Link>
