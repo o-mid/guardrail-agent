@@ -17,9 +17,23 @@ type PolicyDoc struct {
 	Rules   Rules `json:"rules"`
 }
 
+type CheckContext struct {
+	AgentWindow       string   `json:"agentWindow"`
+	RecipientWindow   string   `json:"recipientWindow"`
+	WindowCap         string   `json:"windowCap"`
+	InvoiceID         string   `json:"invoiceId"`
+	PaidInvoices      []string `json:"paidInvoices"`
+	ExpectedRecipient string   `json:"expectedRecipient"`
+	ExpectedToken     string   `json:"expectedToken"`
+	ExpectedChain     string   `json:"expectedChain"`
+	ExpectedAmount    string   `json:"expectedAmount"`
+	PriorTurn         string   `json:"priorTurn"`
+}
+
 type ValidateRequest struct {
-	Plan   any       `json:"plan"`
-	Policy PolicyDoc `json:"policy"`
+	Plan    any          `json:"plan"`
+	Policy  PolicyDoc    `json:"policy"`
+	Context CheckContext `json:"context"`
 }
 
 type ValidateResponse struct {

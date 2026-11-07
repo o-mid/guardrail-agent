@@ -240,6 +240,9 @@ export default function ComposePage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <h2 className="text-xl font-semibold text-foreground">{result.plan.summary}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Model summary. Approve uses the decoded step payload below, not this sentence.
+                </p>
                 {intentText ? (
                   <p className="mt-2 text-sm text-muted-foreground">
                     From intent: <span className="text-foreground">&ldquo;{intentText}&rdquo;</span>

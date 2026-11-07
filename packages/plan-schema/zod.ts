@@ -23,12 +23,17 @@ const swapStep = z
   })
   .strict();
 
+const memoField = z.string().max(280).optional();
+const invoiceField = z.string().regex(/^[A-Za-z0-9-]{1,32}$/).optional();
+
 const transferStep = z
   .object({
     action: z.literal("transfer"),
     token: evmToken,
     to: z.string().min(1),
     amount: decimalAmount,
+    memo: memoField,
+    invoiceId: invoiceField,
   })
   .strict();
 
@@ -38,6 +43,8 @@ const solanaTransferStep = z
     mint: z.enum(["SOL", "MOCK_USDC"]),
     to: z.string().min(1),
     amount: decimalAmount,
+    memo: memoField,
+    invoiceId: invoiceField,
   })
   .strict();
 

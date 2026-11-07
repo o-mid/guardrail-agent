@@ -16,7 +16,11 @@ Approve and the pre-sign path re-run Go `/v1/validate` on the stored step payloa
 
 ## Hosted demo uses MockPlanner
 
-The Vercel + Railway demo runs `PLANNER=mock`. That keyword router needs no API key and is deterministic. `PLANNER=openai` exists for local use, fails closed without `OPENAI_API_KEY`, and still goes through schema + policy. The public URL does not put a live model in the loop.
+The Vercel + Railway demo runs `PLANNER=mock`. That keyword router needs no API key and is deterministic. `PLANNER=openai` fails closed without `OPENAI_API_KEY`. `PLANNER=anthropic` fails closed without `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`. Both still go through schema and policy. This repo does not ship a key. The public URL does not put a live model in the loop until those vars are set on the host.
+
+## /break-it can broadcast without the approve click
+
+`/break-it` has no account. If policy allows the plan, the API broadcasts it on local Anvil (or solana-local if a plan for that chain gets through). A blocked plan shows a simulation and is not signed. The logged-in console still requires a human approve. Visitor text is not stored. Totals, the spend window, and paid invoice ids sit in API memory and disappear on restart. The daily dollar cap does nothing useful until `ARENA_USD_PER_MILLION_INPUT` and `ARENA_USD_PER_MILLION_OUTPUT` are set, because this repo does not invent a model price. Boot refuses an EVM chain id other than 31337 and any RPC host outside local Anvil and solana-test-validator.
 
 ## Fixture evals are not live quality
 

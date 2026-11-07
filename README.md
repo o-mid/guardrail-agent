@@ -63,7 +63,9 @@ Develop against Compose. The hosted pair is the always-on interview URL. It stil
 
 ## Planner
 
-`PLANNER=mock` is the default for CI and the hosted demo: a keyword router, no keys. `PLANNER=openai` plus `OPENAI_API_KEY` calls an OpenAI-compatible chat API. `OPENAI_MODEL` defaults to `gpt-4o-mini`. Missing key throws (fail-closed, no silent fallback to mock). Policy and human approve do not change.
+`PLANNER=mock` is the default for CI and the hosted demo: a keyword router, no keys. `PLANNER=openai` plus `OPENAI_API_KEY` calls an OpenAI-compatible chat API. `OPENAI_MODEL` defaults to `gpt-4o-mini`. `PLANNER=anthropic` plus `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` calls the Anthropic messages API. A missing key or model throws (fail-closed, no silent fallback to mock). Policy does not change. The logged-in console still waits for a human approve.
+
+`/break-it` takes unauthenticated text and runs that same planner and policy against one standing invoice. If policy allows it, the API broadcasts on local Anvil. If policy blocks it, the page shows a simulation and does not sign. See [production gaps](docs/production-gaps.md).
 
 ## Evals
 

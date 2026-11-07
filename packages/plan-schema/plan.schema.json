@@ -78,7 +78,9 @@
         "action": { "const": "transfer" },
         "token": { "$ref": "#/$defs/evmToken" },
         "to": { "type": "string", "minLength": 1 },
-        "amount": { "$ref": "#/$defs/decimalAmount" }
+        "amount": { "$ref": "#/$defs/decimalAmount" },
+        "memo": { "type": "string", "maxLength": 280 },
+        "invoiceId": { "type": "string", "pattern": "^[A-Za-z0-9-]{1,32}$" }
       }
     },
     "solanaTransferStep": {
@@ -89,7 +91,9 @@
         "action": { "const": "transfer" },
         "mint": { "type": "string", "enum": ["SOL", "MOCK_USDC"] },
         "to": { "type": "string", "minLength": 1 },
-        "amount": { "$ref": "#/$defs/decimalAmount" }
+        "amount": { "$ref": "#/$defs/decimalAmount" },
+        "memo": { "type": "string", "maxLength": 280 },
+        "invoiceId": { "type": "string", "pattern": "^[A-Za-z0-9-]{1,32}$" }
       }
     }
   }

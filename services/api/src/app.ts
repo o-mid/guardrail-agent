@@ -10,6 +10,7 @@ import { plansRouter } from "./routes/plans.js";
 import { auditRouter } from "./routes/audit.js";
 import { walletAuthRouter } from "./routes/walletAuth.js";
 import { streamRouter } from "./routes/stream.js";
+import { arenaRouter } from "./routes/arena.js";
 
 export function createApp() {
   const app = express();
@@ -30,6 +31,7 @@ export function createApp() {
   );
 
   app.use("/api", healthRouter);
+  app.use("/api", arenaRouter);
   app.use("/api", authRouter);
   app.use("/api", walletAuthRouter);
   app.use("/api", walletsRouter);
