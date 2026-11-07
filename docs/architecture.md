@@ -98,4 +98,6 @@ Plans always store `rawModelJson` for debugging and audit, even when rejected.
 
 **Foundry mocks.** Anvil ships in compose under the `full` profile. Contract addresses land in `contracts/deployments/anvil.json` after `forge script`.
 
-**MockPlanner default.** Keyword router in `services/api/src/planner/mock.ts`. Zero API keys. `PLANNER=openai` with `OPENAI_API_KEY` uses an OpenAI-compatible chat client; output is schema-checked then policy-gated. openai without a key fails closed (no silent mock).
+**MockPlanner default.** Keyword router in `services/api/src/planner/mock.ts`. Zero API keys. `PLANNER=openai` with `OPENAI_API_KEY` uses an OpenAI-compatible chat client. `PLANNER=anthropic` with `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` calls the Anthropic messages API. Either one without the key it needs fails closed (no silent mock). Output is schema-checked, then policy-gated.
+
+`/break-it` is a public page. It does not create a user. The same planner and policy run on the visitor's text. An allow is broadcast on the local chain. A deny is shown as a simulation and is not signed. The console path still waits for a human approve.

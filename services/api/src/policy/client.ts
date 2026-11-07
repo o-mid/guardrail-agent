@@ -19,11 +19,28 @@ export type ValidateResult = {
   humanMessages: string[];
 };
 
-export async function validatePlan(plan: unknown, policy: { version: number; rules: PolicyRules }): Promise<ValidateResult> {
+export type PolicyContext = {
+  agentWindow?: string;
+  recipientWindow?: string;
+  windowCap?: string;
+  invoiceId?: string;
+  paidInvoices?: string[];
+  expectedRecipient?: string;
+  expectedToken?: string;
+  expectedChain?: string;
+  expectedAmount?: string;
+  priorTurn?: string;
+};
+
+export async function validatePlan(
+  plan: unknown,
+  policy: { version: number; rules: PolicyRules },
+  context?: PolicyContext,
+): Promise<ValidateResult> {
   const r = await fetch(`${config.policyServiceUrl}/v1/validate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan, policy }),
+    body: JSON.stringify({ plan, policy, context: context ?? {} }),
   });
   if (!r.ok) {
     throw new Error(`policy service ${r.status}`);
@@ -46,7 +63,10 @@ export const defaultRules: PolicyRules = {
     "solana-local": ["transfer"],
   },
   allowRecipients: {
-    anvil: ["0x1111111111111111111111111111111111111111"],
+    anvil: [
+      "0x1111111111111111111111111111111111111111",
+      "0x2222222222222222222222222222222222222222",
+    ],
     "solana-local": ["496mWS1YCGE7YVzGzqifoRvzmtgUvgG1Mz3vht22GsSK"],
   },
   allowTokens: {

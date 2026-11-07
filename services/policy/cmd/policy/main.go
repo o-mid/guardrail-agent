@@ -50,7 +50,7 @@ func main() {
 		policyCodes := []string{}
 		human := []string{}
 		if len(schemaErrors) == 0 {
-			policyCodes, human = validate.CheckPolicy(req.Plan, req.Policy)
+			policyCodes, human = validate.CheckPolicyContext(req.Plan, req.Policy, req.Context)
 		} else {
 			human = append(human, "plan failed schema validation")
 		}

@@ -106,7 +106,9 @@ export function StepRow({
         </div>
 
         {fields.length > 0 ? (
-          <dl className="mt-3 grid gap-x-4 gap-y-1 border-t border-border pt-3 sm:grid-cols-2">
+          <>
+          <p className="mt-3 text-xs font-medium text-muted-foreground">Decoded from the step payload</p>
+          <dl className="mt-2 grid gap-x-4 gap-y-1 border-t border-border pt-3 sm:grid-cols-2">
             {fields.map(([key, value]) => (
               <div key={key} className="flex min-w-0 gap-2 text-xs">
                 <dt className="shrink-0 font-medium text-muted-foreground">{key}</dt>
@@ -116,6 +118,7 @@ export function StepRow({
               </div>
             ))}
           </dl>
+          </>
         ) : null}
 
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">

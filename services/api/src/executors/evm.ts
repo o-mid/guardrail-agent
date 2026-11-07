@@ -70,6 +70,9 @@ async function sendViaVault(req: TransactionRequest, stored: StoredPlanForPolicy
     try {
       const nonce = await pendingNonce(evmAddress);
       const network = await getProvider().getNetwork();
+      if (Number(network.chainId) !== 31337) {
+        throw new Error("refused_chain_id");
+      }
       const fee = await getProvider().getFeeData();
       let toAddr: string;
       if (typeof req.to === "string") toAddr = req.to;

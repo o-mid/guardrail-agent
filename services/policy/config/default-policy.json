@@ -9,7 +9,10 @@
       "solana-local": ["transfer"]
     },
     "allowRecipients": {
-      "anvil": ["0x1111111111111111111111111111111111111111"],
+      "anvil": [
+        "0x1111111111111111111111111111111111111111",
+        "0x2222222222222222222222222222222222222222"
+      ],
       "solana-local": ["496mWS1YCGE7YVzGzqifoRvzmtgUvgG1Mz3vht22GsSK"]
     },
     "allowTokens": {

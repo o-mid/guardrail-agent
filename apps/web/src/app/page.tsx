@@ -39,6 +39,9 @@ export default function HomePage() {
                 <ArrowRightIcon className="size-4" />
               </Link>
             </Button>
+            <Link href="/break-it" className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground hover:text-foreground">
+              Try to break a payment
+            </Link>
             <Link href="/register" className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground hover:text-foreground">
               Register
             </Link>

@@ -4,10 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"regexp"
 	"strings"
 )
 
+var instructionRE = regexp.MustCompile(`(?i)(ignore previous|disregard previous|system prompt|send the funds|send the payment|send it to)`)
+var hexBlobRE = regexp.MustCompile(`(?i)0x[0-9a-f]{41,}`)
+
 func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string) {
+	return CheckPolicyContext(plan, policy, CheckContext{})
+}
+
+func CheckPolicyContext(plan any, policy PolicyDoc, ctx CheckContext) (codes []string, messages []string) {
 	m, ok := plan.(map[string]any)
 	if !ok {
 		return []string{"action_not_allowed"}, []string{"plan is not an object"}
@@ -27,11 +35,27 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 
 	allowedActions := rules.Actions[chain]
 	allowedTokens := setOf(rules.AllowTokens[chain])
-	allowedRecipients := setOf(rules.AllowRecipients[chain])
+	recipientList := rules.AllowRecipients[chain]
+	allowedRecipients := setOf(recipientList)
 	total := new(big.Rat)
 	capAmt, capErr := parseAmount(rules.MaxAmount)
 	if capErr != nil {
 		capAmt = big.NewRat(100, 1)
+	}
+	deviated := false
+	if ctx.ExpectedChain != "" && !strings.EqualFold(chain, ctx.ExpectedChain) {
+		codes = append(codes, "wrong_chain")
+		messages = append(messages, fmt.Sprintf("chain %s is not the task chain %s", chain, ctx.ExpectedChain))
+		deviated = true
+	}
+	summary := asString(m["summary"])
+	if instructionRE.MatchString(summary) {
+		codes = append(codes, "memo_smuggle")
+		messages = append(messages, "summary contains payment instructions")
+	}
+	if hexBlobRE.MatchString(summary) {
+		codes = append(codes, "hex_smuggle")
+		messages = append(messages, "summary contains a hex blob")
 	}
 
 	for i, raw := range steps {
@@ -92,6 +116,42 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 			if amt, err := parseAmount(asString(step["amount"])); err == nil {
 				total.Add(total, amt)
 			}
+			if isLookalike(to, recipientList) {
+				codes = append(codes, "lookalike_recipient")
+				messages = append(messages, fmt.Sprintf("step %d recipient %s resembles an allowlisted address", i, to))
+			}
+			if ctx.ExpectedRecipient != "" && to != "" && !strings.EqualFold(to, ctx.ExpectedRecipient) && !strings.EqualFold(to, "self") {
+				codes = append(codes, "recipient_swap")
+				messages = append(messages, fmt.Sprintf("step %d recipient %s is not the task recipient", i, to))
+				deviated = true
+			}
+		}
+
+		token := tokenOf(step)
+		if ctx.ExpectedToken != "" && token != "" && !strings.EqualFold(token, ctx.ExpectedToken) {
+			codes = append(codes, "wrong_token")
+			messages = append(messages, fmt.Sprintf("step %d token %s is not the task token %s", i, token, ctx.ExpectedToken))
+			deviated = true
+		}
+		amtStr := amountOf(step)
+		if ctx.ExpectedAmount != "" && amtStr != "" && !amountsEqual(amtStr, ctx.ExpectedAmount) {
+			codes = append(codes, "amount_mismatch")
+			messages = append(messages, fmt.Sprintf("step %d amount %s is not the task amount %s", i, amtStr, ctx.ExpectedAmount))
+			deviated = true
+		}
+		memo := asString(step["memo"])
+		if instructionRE.MatchString(memo) {
+			codes = append(codes, "memo_smuggle")
+			messages = append(messages, fmt.Sprintf("step %d memo contains payment instructions", i))
+		}
+		if hexBlobRE.MatchString(memo) {
+			codes = append(codes, "hex_smuggle")
+			messages = append(messages, fmt.Sprintf("step %d memo contains a hex blob", i))
+		}
+		invoice := asString(step["invoiceId"])
+		if invoice != "" && invoicePaid(invoice, ctx.PaidInvoices) {
+			codes = append(codes, "duplicate_invoice")
+			messages = append(messages, fmt.Sprintf("step %d invoice %s was already paid", i, invoice))
 		}
 	}
 
@@ -100,11 +160,100 @@ func CheckPolicy(plan any, policy PolicyDoc) (codes []string, messages []string)
 		messages = append(messages, fmt.Sprintf("total %s exceeds cap %s", total.FloatString(4), capAmt.FloatString(4)))
 	}
 
+	windowCap := capAmt
+	if ctx.WindowCap != "" {
+		if parsed, err := parseAmount(ctx.WindowCap); err == nil {
+			windowCap = parsed
+		}
+	}
+	if overWindow(ctx.AgentWindow, total, windowCap) || overWindow(ctx.RecipientWindow, total, windowCap) {
+		codes = append(codes, "spend_window_exceeded")
+		messages = append(messages, fmt.Sprintf("rolling spend plus %s exceeds window cap %s", total.FloatString(4), windowCap.FloatString(4)))
+	}
+	if ctx.InvoiceID != "" && invoicePaid(ctx.InvoiceID, ctx.PaidInvoices) {
+		codes = append(codes, "duplicate_invoice")
+		messages = append(messages, fmt.Sprintf("invoice %s was already paid", ctx.InvoiceID))
+	}
+	if ctx.PriorTurn != "" && instructionRE.MatchString(ctx.PriorTurn) && deviated {
+		codes = append(codes, "delayed_instruction")
+		messages = append(messages, "an earlier turn changed the payment")
+	}
+
 	if !rules.AllowAutonomous {
 		// autonomous flag is enforced by API HITL; keep code available
 	}
 
 	return unique(codes), messages
+}
+
+func tokenOf(step map[string]any) string {
+	token := asString(step["token"])
+	if token == "" {
+		token = asString(step["tokenIn"])
+	}
+	if token == "" {
+		token = asString(step["mint"])
+	}
+	return token
+}
+
+func amountOf(step map[string]any) string {
+	amt := asString(step["amount"])
+	if amt == "" {
+		amt = asString(step["amountIn"])
+	}
+	return amt
+}
+
+func amountsEqual(a, b string) bool {
+	ra, ea := parseAmount(a)
+	rb, eb := parseAmount(b)
+	if ea != nil || eb != nil {
+		return false
+	}
+	return ra.Cmp(rb) == 0
+}
+
+func overWindow(already string, this *big.Rat, cap *big.Rat) bool {
+	if strings.TrimSpace(already) == "" {
+		return false
+	}
+	prev, err := parseAmount(already)
+	if err != nil {
+		return false
+	}
+	sum := new(big.Rat).Add(prev, this)
+	return sum.Cmp(cap) > 0
+}
+
+func invoicePaid(id string, paid []string) bool {
+	for _, item := range paid {
+		if strings.EqualFold(strings.TrimSpace(item), strings.TrimSpace(id)) {
+			return true
+		}
+	}
+	return false
+}
+
+func isLookalike(to string, allow []string) bool {
+	if to == "" || strings.EqualFold(to, "self") || contains(allow, to) {
+		return false
+	}
+	for _, candidate := range allow {
+		if sameEnds(to, candidate) {
+			return true
+		}
+	}
+	return false
+}
+
+func sameEnds(a, b string) bool {
+	as := strings.ToLower(strings.TrimPrefix(strings.TrimSpace(a), "0x"))
+	bs := strings.ToLower(strings.TrimPrefix(strings.TrimSpace(b), "0x"))
+	if len(as) < 8 || len(as) != len(bs) || as == bs {
+		return false
+	}
+	return as[:4] == bs[:4] && as[len(as)-4:] == bs[len(bs)-4:]
 }
 
 func asString(v any) string {

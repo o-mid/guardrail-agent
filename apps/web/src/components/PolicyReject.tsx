@@ -23,6 +23,30 @@ const CODE_COPY: Record<string, { title: string; blurb: string }> = {
     title: "Amount over policy cap",
     blurb: "Requested amount exceeds the configured spend cap. Plan stops before human approve.",
   },
+  spend_window_exceeded: {
+    title: "Rolling spend over the cap",
+    blurb: "This payment plus recent spend for the agent or recipient is over the window. The single step can still be under the per-payment cap.",
+  },
+  recipient_swap: {
+    title: "Recipient is not the one on the task",
+    blurb: "The address can be allowlisted and still be the wrong payee for this invoice.",
+  },
+  lookalike_recipient: {
+    title: "Recipient looks like an allowlisted address",
+    blurb: "Same length, same first and last four characters, different address.",
+  },
+  duplicate_invoice: {
+    title: "Invoice already paid",
+    blurb: "The invoice id is already in the paid set for this agent.",
+  },
+  wrong_token: {
+    title: "Token does not match the task",
+    blurb: "The token is on the allowlist, and it is not the token the task named.",
+  },
+  wrong_chain: {
+    title: "Chain does not match the task",
+    blurb: "The chain is one this demo can run, and it is not the chain the task named.",
+  },
 };
 
 function pickHeadline(codes: string[], fallback: string): { title: string; blurb?: string } {

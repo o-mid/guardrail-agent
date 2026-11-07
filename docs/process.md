@@ -141,6 +141,8 @@ Append-only `auditevents` collection. Filter via `GET /api/audit?entityId=...`.
 | `plan.completed` | All steps succeeded | `{}` |
 | `plan.cancelled` | User rejected plan | `{}` |
 
-Policy codes (not audit types, but stored in rejection payloads and plan rows): `chain_not_allowed`, `max_steps_exceeded`, `action_not_allowed`, `mint_not_allowed`, `infinite_approve`, `slippage_too_high`, `recipient_not_allowed`, `amount_over_cap`.
+Policy codes (not audit types, but stored in rejection payloads and plan rows): `chain_not_allowed`, `wrong_chain`, `max_steps_exceeded`, `action_not_allowed`, `mint_not_allowed`, `wrong_token`, `infinite_approve`, `slippage_too_high`, `recipient_not_allowed`, `lookalike_recipient`, `recipient_swap`, `amount_over_cap`, `amount_mismatch`, `spend_window_exceeded`, `duplicate_invoice`, `memo_smuggle`, `hex_smuggle`, `delayed_instruction`.
+
+`wrong_chain`, `wrong_token`, `recipient_swap`, `amount_mismatch`, `spend_window_exceeded`, `duplicate_invoice`, and `delayed_instruction` run when the caller passes a task context. The logged-in console does not pass one, so those codes stay quiet there. `/break-it` passes the invoice 1042 context: 50 MOCK_USDC to `0x1111111111111111111111111111111111111111` on anvil. `0x2222222222222222222222222222222222222222` is also allowlisted, which is how a swap to another allowlisted address is visible.
 
 Each of those writes also emits one JSON line on API stdout: `event`, `intentId`, `planId`, `policyCodes`, `latencyMs`, `tokens`. Same `AuditEvent` rows as before; no tracing vendor.
