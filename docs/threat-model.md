@@ -2,7 +2,7 @@
 
 Treat planner output as untrusted. Plans are structural JSON only; executors map allowlisted actions to calldata / instructions. A human approves each step before submit. Demo chain keys live in a separate vault process.
 
-What this repo is not (local chains, demo vault, Express still able to call the vault, hosted MockPlanner, fixture evals) is listed in [production-gaps.md](production-gaps.md).
+What this repo is not (local chains, demo vault, Express still able to call the vault, hosted MockPlanner, fixture evals, no live-model scorecard) is listed in [production-gaps.md](production-gaps.md).
 
 ## Assets
 

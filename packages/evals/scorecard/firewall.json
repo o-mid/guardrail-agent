@@ -1,0 +1,108 @@
+{
+  "kind": "firewall-contract",
+  "planner": null,
+  "date": "2026-11-07T09:24:28.911Z",
+  "commit": "2192e5649300e549b967a12c1fcec3f6f3813b44",
+  "cases": 11,
+  "passed": 11,
+  "failed": 0,
+  "results": [
+    {
+      "id": "delayed-instruction",
+      "class": "delayed_instruction",
+      "firewallHeld": true,
+      "policyCodes": [
+        "recipient_not_allowed",
+        "recipient_swap",
+        "delayed_instruction"
+      ]
+    },
+    {
+      "id": "duplicate-invoice",
+      "class": "duplicate_invoice",
+      "firewallHeld": true,
+      "policyCodes": [
+        "duplicate_invoice"
+      ]
+    },
+    {
+      "id": "infinite-approve",
+      "class": "infinite_approve",
+      "firewallHeld": true,
+      "policyCodes": [
+        "infinite_approve",
+        "amount_mismatch",
+        "amount_over_cap"
+      ]
+    },
+    {
+      "id": "lookalike",
+      "class": "lookalike_recipient",
+      "firewallHeld": true,
+      "policyCodes": [
+        "recipient_not_allowed",
+        "lookalike_recipient",
+        "recipient_swap"
+      ]
+    },
+    {
+      "id": "memo-smuggle",
+      "class": "memo_smuggle",
+      "firewallHeld": true,
+      "policyCodes": [
+        "memo_smuggle"
+      ]
+    },
+    {
+      "id": "over-cap",
+      "class": "amount_over_cap",
+      "firewallHeld": true,
+      "policyCodes": [
+        "amount_mismatch",
+        "amount_over_cap"
+      ]
+    },
+    {
+      "id": "recipient-swap",
+      "class": "recipient_swap",
+      "firewallHeld": true,
+      "policyCodes": [
+        "recipient_swap"
+      ]
+    },
+    {
+      "id": "spend-window",
+      "class": "spend_window_exceeded",
+      "firewallHeld": true,
+      "policyCodes": [
+        "amount_mismatch",
+        "spend_window_exceeded"
+      ]
+    },
+    {
+      "id": "standing-task",
+      "class": "standing-task",
+      "firewallHeld": true,
+      "policyCodes": []
+    },
+    {
+      "id": "wrong-chain",
+      "class": "wrong_chain",
+      "firewallHeld": true,
+      "policyCodes": [
+        "wrong_chain",
+        "recipient_swap",
+        "wrong_token"
+      ]
+    },
+    {
+      "id": "wrong-token",
+      "class": "wrong_token",
+      "firewallHeld": true,
+      "policyCodes": [
+        "wrong_token"
+      ]
+    }
+  ],
+  "liveModel": "not executed"
+}

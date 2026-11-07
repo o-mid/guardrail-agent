@@ -1,8 +1,10 @@
 # Evals
 
-CI posts canned `plan` JSON at the Go policy service. There is no planner on that path and no `OPENAI_API_KEY`. GitHub Actions runs fixtures only.
+CI posts canned `plan` JSON at the Go policy service, then posts `attacks/v1/` the same way. There is no planner on that path and no API key. GitHub Actions runs both. A weakened rule fails the job: the case file names a policy code, and the runner exits 1 when that code is missing or the plan is allowed.
 
-`npm run test:live` records live planner traces. It is opt-in and not in CI.
+`npm run test:live` records live planner traces for the older intent fixtures. It is opt-in and not in CI.
+
+`npm run test:attacks` sends `attacks/v1/` through `createPlanner()` and then policy. `EVAL_PLANNER=mock` is the local run. `EVAL_PLANNER=anthropic` or `openai` is the live model, and it refuses to start without a key and, for a priced model, both `ARENA_USD_PER_MILLION_INPUT` and `ARENA_USD_PER_MILLION_OUTPUT`. The nightly workflow runs that command only on `o-mid/guardrail-agent`. A missing secret skips. The skip is not a result. Traces from the mock run checked into this repo are under `scorecard/mock-traces/`.
 
 ## Add a fixture
 
@@ -56,4 +58,11 @@ cd packages/evals && npm install
 POLICY_SERVICE_URL=http://127.0.0.1:8090 npm test
 ```
 
-`npm test` runs the comparison unit tests (no network) and then the fixture runner.
+`npm test` runs the comparison unit tests (no network), the fixture runner, and the attack runner. Both runners need policy on `:8090`.
+
+To stamp `scorecard/firewall.json` after a real policy run:
+
+```bash
+SCORECARD_WRITE=1 POLICY_SERVICE_URL=http://127.0.0.1:8090 node --import tsx ./attack-runner.ts
+EVAL_PLANNER=mock EVAL_TRACE_DIR=$PWD/scorecard/mock-traces npm run test:attacks
+```

@@ -1,0 +1,55 @@
+name: live-attacks
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  live:
+    if: github.repository == 'o-mid/guardrail-agent'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: start policy
+        working-directory: services/policy
+        run: |
+          go build -o /tmp/policy ./cmd/policy
+          PLAN_SCHEMA_PATH=$PWD/internal/schema/plan.schema.json \
+          POLICY_DEFAULTS_PATH=$PWD/config/default-policy.json \
+          /tmp/policy &
+          sleep 1
+      - name: install eval deps
+        working-directory: packages/plan-schema
+        run: npm install && npm run build
+      - name: install api deps
+        working-directory: services/api
+        run: npm ci
+      - name: install evals
+        working-directory: packages/evals
+        run: npm install
+      - name: live attack suite
+        working-directory: packages/evals
+        env:
+          POLICY_SERVICE_URL: http://127.0.0.1:8090
+          EVAL_PLANNER: anthropic
+          EVAL_REPEATS: "3"
+          EVAL_USD_CAP: "2"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          ARENA_USD_PER_MILLION_INPUT: ${{ secrets.ARENA_USD_PER_MILLION_INPUT }}
+          ARENA_USD_PER_MILLION_OUTPUT: ${{ secrets.ARENA_USD_PER_MILLION_OUTPUT }}
+        run: npm run test:attacks
+      - name: upload traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: attack-traces
+          path: packages/evals/traces
+          if-no-files-found: ignore
